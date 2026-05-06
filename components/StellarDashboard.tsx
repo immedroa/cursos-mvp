@@ -170,28 +170,28 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
 
   return (
     <>
-      {/* Selector de Pestañas */}
-      <nav className="flex items-center gap-8 mb-12 border-b border-white/5">
+      {/* Selector de Pestañas con mejor spacing */}
+      <nav className="flex items-center gap-12 mb-16 border-b border-white/5 pt-4">
         <button 
           onClick={() => setActiveTab('AULA')}
-          className={`pb-4 text-[10px] font-black uppercase tracking-[0.3em] transition-all relative ${
+          className={`pb-4 text-[11px] font-black uppercase tracking-[0.4em] transition-all relative ${
             activeTab === 'AULA' ? 'text-white' : 'text-neutral-500 hover:text-neutral-300'
           }`}
         >
           Mi Aula
           {activeTab === 'AULA' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-yellow-400 shadow-[0_0_12px_rgba(250,204,21,0.4)]"></div>
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.5)]"></div>
           )}
         </button>
         <button 
           onClick={() => setActiveTab('HISTORIAL')}
-          className={`pb-4 text-[10px] font-black uppercase tracking-[0.3em] transition-all relative ${
+          className={`pb-4 text-[11px] font-black uppercase tracking-[0.4em] transition-all relative ${
             activeTab === 'HISTORIAL' ? 'text-white' : 'text-neutral-500 hover:text-neutral-300'
           }`}
         >
           Historial Stellar
           {activeTab === 'HISTORIAL' && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-yellow-400 shadow-[0_0_12px_rgba(250,204,21,0.4)]"></div>
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.5)]"></div>
           )}
         </button>
       </nav>
@@ -291,9 +291,9 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
                 <div className="h-4 bg-white/5 rounded"></div>
               </div>
             </div>
-          ) : history.length > 0 ? (
+          ) : history.filter(item => !!item.reward_tx_hash).length > 0 ? (
             <div className="grid gap-4">
-              {history.map((item) => {
+              {history.filter(item => !!item.reward_tx_hash).map((item) => {
                 const mentor = MENTORS.find(m => m.id === item.mentor_id)
                 const date = new Date(item.created_at).toLocaleDateString('es-PE', {
                   day: '2-digit',
@@ -312,22 +312,21 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
                       </div>
                     </div>
 
-                    <div className="flex flex-col md:items-end gap-2">
-                      <div className="flex items-center gap-2 bg-emerald-400/5 px-3 py-1.5 rounded-full border border-emerald-400/10">
+                    <div className="flex flex-col md:flex-row items-center gap-4">
+                      <div className="flex items-center gap-2 bg-emerald-400/5 px-4 py-2 rounded-full border border-emerald-400/10">
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
                         <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">+{item.reward_amount_xlm} XLM Demo</span>
                       </div>
-                      {item.reward_tx_hash && (
-                        <a 
-                          href={`https://testnet.steexp.com/tx/${item.reward_tx_hash}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[10px] font-bold text-neutral-400 hover:text-white transition-colors flex items-center gap-1.5 group/link"
-                        >
-                          TX: {item.reward_tx_hash.slice(0, 8)}...{item.reward_tx_hash.slice(-8)}
-                          <svg className="w-3 h-3 opacity-50 group-hover/link:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                        </a>
-                      )}
+                      
+                      <a 
+                        href={`https://testnet.steexp.com/tx/${item.reward_tx_hash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-white/5 hover:bg-white/10 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest border border-white/10 transition-all flex items-center gap-2 group/link"
+                      >
+                        Explorer
+                        <svg className="w-3 h-3 opacity-50 group-hover/link:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                      </a>
                     </div>
                   </div>
                 )
