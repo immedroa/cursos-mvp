@@ -54,6 +54,7 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress 
   const [lastRewardTx, setLastRewardTx] = useState<{ hash: string, url: string } | null>(null)
   const [history, setHistory] = useState<any[]>([])
   const [historyLoading, setHistoryLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<'AULA' | 'HISTORIAL'>('AULA')
 
   const fetchHistory = async () => {
     try {
@@ -168,147 +169,175 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress 
 
   return (
     <>
-      <section className="grid gap-6 md:grid-cols-3 mb-16">
-        {/* A) Bloque "Mis puntos" */}
-        <div className="p-8 rounded-[32px] border border-white/10 bg-white/[0.02] relative overflow-hidden group hover:border-yellow-400/30 transition-all">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-400/5 blur-2xl"></div>
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 mb-2">Acumulados</p>
-          <h3 className="text-xl font-black mb-4 uppercase tracking-tight">Mis Puntos</h3>
-          <div className="flex items-end gap-2 mb-4">
-            <span className="text-4xl font-black text-yellow-400 leading-none">{points}</span>
-            <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest pb-1">PTS</span>
-          </div>
-          <p className="text-[11px] text-neutral-400 leading-relaxed">
-            Gana puntos participando en cursos, retos y eventos para impulsar tu progreso en el ecosistema Web3.
-          </p>
-        </div>
-
-        {/* B) Bloque "Mi wallet Stellar" */}
-        <div className="p-8 rounded-[32px] border border-white/10 bg-white/[0.02] relative overflow-hidden group hover:border-yellow-400/30 transition-all">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-blue-400/5 blur-2xl"></div>
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 mb-2">Red Stellar</p>
-          <h3 className="text-xl font-black mb-4 uppercase tracking-tight">Mi Wallet</h3>
-          {stellarAddress ? (
-            <div className="space-y-4">
-              <div>
-                <span className="block text-sm font-mono text-white mb-1">{truncateAddress(stellarAddress)}</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Wallet conectada</span>
-                  {stellarNetwork && (
-                    <>
-                      <span className="text-white/20 text-[10px]">•</span>
-                      <span className={`text-[10px] font-bold uppercase tracking-widest ${stellarNetwork.toUpperCase() === 'TESTNET' ? 'text-blue-400' : 'text-orange-400'}`}>
-                        {stellarNetwork}
-                      </span>
-                    </>
-                  )}
-                </div>
-              </div>
-              {stellarNetwork && stellarNetwork.toUpperCase() !== 'TESTNET' ? (
-                <p className="text-[11px] text-orange-400/80 leading-relaxed bg-orange-400/5 p-3 rounded-xl border border-orange-400/10">
-                  ⚠️ Cambia tu wallet a <strong>Testnet</strong> para probar las recompensas on-chain.
-                </p>
-              ) : (
-                <p className="text-[11px] text-neutral-400 leading-relaxed">
-                  Wallet lista para recompensas demo en Stellar Testnet.
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <p className="text-xs text-neutral-400 leading-relaxed">Conecta tu wallet para habilitar recompensas on-chain.</p>
-              <button onClick={handleConnectWallet} disabled={loading} className={`w-full py-3 rounded-2xl font-black text-xs transition-colors uppercase tracking-widest ${loading ? 'bg-neutral-800 text-neutral-500' : 'bg-white text-black hover:bg-yellow-400'}`}>
-                {loading ? 'Conectando...' : 'Conectar mi wallet'}
-              </button>
-            </div>
+      {/* Selector de Pestañas */}
+      <div className="flex items-center gap-8 mb-12 border-b border-white/5">
+        <button 
+          onClick={() => setActiveTab('AULA')}
+          className={`pb-4 text-[10px] font-black uppercase tracking-[0.3em] transition-all relative ${
+            activeTab === 'AULA' ? 'text-white' : 'text-neutral-500 hover:text-neutral-300'
+          }`}
+        >
+          Mi Aula
+          {activeTab === 'AULA' && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-yellow-400 shadow-[0_0_12px_rgba(250,204,21,0.4)]"></div>
           )}
-        </div>
-
-        {/* C) Bloque "Mentoría 1:1" */}
-        <div className="p-8 rounded-[32px] border border-yellow-400/20 bg-yellow-400/5 relative overflow-hidden group hover:border-yellow-400/40 transition-all">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-400 mb-2">Exclusivo</p>
-          <h3 className="text-xl font-black mb-4 uppercase tracking-tight">Mentoría 1:1</h3>
-          <p className="text-xs text-neutral-400 mb-6 leading-relaxed">Despeja tus dudas con expertos en sesiones privadas.</p>
-          <div className="flex items-center justify-between mb-4 border-t border-white/5 pt-4">
-            <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Costo: 100 pts · Tienes: {points} pts</span>
-          </div>
-          {points < 100 && (
-            <p className="text-[11px] text-neutral-400 mb-4 leading-relaxed">Aún no tienes los puntos necesarios.</p>
+        </button>
+        <button 
+          onClick={() => setActiveTab('HISTORIAL')}
+          className={`pb-4 text-[10px] font-black uppercase tracking-[0.3em] transition-all relative ${
+            activeTab === 'HISTORIAL' ? 'text-white' : 'text-neutral-500 hover:text-neutral-300'
+          }`}
+        >
+          Historial Stellar
+          {activeTab === 'HISTORIAL' && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-yellow-400 shadow-[0_0_12px_rgba(250,204,21,0.4)]"></div>
           )}
-          <button 
-            onClick={handleOpenMentors}
-            disabled={points < 100 || (stellarNetwork?.toUpperCase() !== 'TESTNET' && !!stellarAddress)}
-            className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${points >= 100 && (stellarNetwork?.toUpperCase() === 'TESTNET' || !stellarAddress) ? 'bg-yellow-400 text-black hover:scale-[1.02]' : 'bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed'}`}
-          >
-            {points >= 100 ? 'Canjear mentoría' : 'Faltan puntos'}
-          </button>
-        </div>
-      </section>
+        </button>
+      </div>
 
-      {/* D) Nueva Sección: Historial Stellar */}
-      <section className="mt-16">
-        <div className="mb-8">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-400 mb-2">Transparencia</p>
-          <h2 className="text-3xl font-black tracking-tighter uppercase leading-none">Historial Stellar</h2>
-          <p className="text-neutral-400 mt-2 text-sm">Tus recompensas on-chain y pruebas de canje en Stellar Testnet.</p>
-        </div>
-
-        {historyLoading ? (
-          <div className="animate-pulse flex space-x-4 p-8 bg-white/[0.02] rounded-[32px] border border-white/5">
-            <div className="flex-1 space-y-4 py-1">
-              <div className="h-4 bg-white/5 rounded w-3/4"></div>
-              <div className="h-4 bg-white/5 rounded"></div>
+      {activeTab === 'AULA' ? (
+        <section className="grid gap-6 md:grid-cols-3 mb-16 animate-in fade-in duration-500">
+          {/* A) Bloque "Mis puntos" */}
+          <div className="p-8 rounded-[32px] border border-white/10 bg-white/[0.02] relative overflow-hidden group hover:border-yellow-400/30 transition-all">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-400/5 blur-2xl"></div>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 mb-2">Acumulados</p>
+            <h3 className="text-xl font-black mb-4 uppercase tracking-tight">Mis Puntos</h3>
+            <div className="flex items-end gap-2 mb-4">
+              <span className="text-4xl font-black text-yellow-400 leading-none">{points}</span>
+              <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest pb-1">PTS</span>
             </div>
+            <p className="text-[11px] text-neutral-400 leading-relaxed">
+              Gana puntos participando en cursos, retos y eventos para impulsar tu progreso en el ecosistema Web3.
+            </p>
           </div>
-        ) : history.length > 0 ? (
-          <div className="grid gap-4">
-            {history.map((item) => {
-              const mentor = MENTORS.find(m => m.id === item.mentor_id)
-              const date = new Date(item.created_at).toLocaleDateString('es-PE', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric'
-              })
-              return (
-                <div key={item.id} className="group p-6 rounded-[24px] border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] transition-all flex flex-col md:flex-row md:items-center justify-between gap-6">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-yellow-400/10 flex items-center justify-center text-yellow-400 shrink-0">
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                    <div>
-                      <h4 className="font-black text-white uppercase tracking-tight">Mentoría con {mentor?.name || item.mentor_id}</h4>
-                      <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">{date} • {item.points_spent} PTS Canjeados</p>
-                    </div>
-                  </div>
 
-                  <div className="flex flex-col md:items-end gap-2">
-                    <div className="flex items-center gap-2 bg-emerald-400/5 px-3 py-1.5 rounded-full border border-emerald-400/10">
-                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
-                      <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">+{item.reward_amount_xlm} XLM Demo</span>
-                    </div>
-                    {item.reward_tx_hash && (
-                      <a 
-                        href={`https://stellar.expert/explorer/testnet/tx/${item.reward_tx_hash}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[10px] font-bold text-neutral-400 hover:text-white transition-colors flex items-center gap-1.5 group/link"
-                      >
-                        TX: {item.reward_tx_hash.slice(0, 8)}...{item.reward_tx_hash.slice(-8)}
-                        <svg className="w-3 h-3 opacity-50 group-hover/link:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                      </a>
+          {/* B) Bloque "Mi wallet Stellar" */}
+          <div className="p-8 rounded-[32px] border border-white/10 bg-white/[0.02] relative overflow-hidden group hover:border-yellow-400/30 transition-all">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-400/5 blur-2xl"></div>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 mb-2">Red Stellar</p>
+            <h3 className="text-xl font-black mb-4 uppercase tracking-tight">Mi Wallet</h3>
+            {stellarAddress ? (
+              <div className="space-y-4">
+                <div>
+                  <span className="block text-sm font-mono text-white mb-1">{truncateAddress(stellarAddress)}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Wallet conectada</span>
+                    {stellarNetwork && (
+                      <>
+                        <span className="text-white/20 text-[10px]">•</span>
+                        <span className={`text-[10px] font-bold uppercase tracking-widest ${stellarNetwork.toUpperCase() === 'TESTNET' ? 'text-blue-400' : 'text-orange-400'}`}>
+                          {stellarNetwork}
+                        </span>
+                      </>
                     )}
                   </div>
                 </div>
-              )
-            })}
+                {stellarNetwork && stellarNetwork.toUpperCase() !== 'TESTNET' ? (
+                  <p className="text-[11px] text-orange-400/80 leading-relaxed bg-orange-400/5 p-3 rounded-xl border border-orange-400/10">
+                    ⚠️ Cambia tu wallet a <strong>Testnet</strong> para probar las recompensas on-chain.
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-neutral-400 leading-relaxed">
+                    Wallet lista para recompensas demo en Stellar Testnet.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-xs text-neutral-400 leading-relaxed">Conecta tu wallet para habilitar recompensas on-chain.</p>
+                <button onClick={handleConnectWallet} disabled={loading} className={`w-full py-3 rounded-2xl font-black text-xs transition-colors uppercase tracking-widest ${loading ? 'bg-neutral-800 text-neutral-500' : 'bg-white text-black hover:bg-yellow-400'}`}>
+                  {loading ? 'Conectando...' : 'Conectar mi wallet'}
+                </button>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="p-12 text-center rounded-[32px] border border-dashed border-white/10 bg-white/[0.01]">
-            <p className="text-neutral-500 text-sm mb-4">Todavía no tienes recompensas on-chain registradas.</p>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-600">Canjea una mentoría para ver aquí tus transacciones en Stellar Testnet.</p>
+
+          {/* C) Bloque "Mentoría 1:1" */}
+          <div className="p-8 rounded-[32px] border border-yellow-400/20 bg-yellow-400/5 relative overflow-hidden group hover:border-yellow-400/40 transition-all">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-400 mb-2">Exclusivo</p>
+            <h3 className="text-xl font-black mb-4 uppercase tracking-tight">Mentoría 1:1</h3>
+            <p className="text-xs text-neutral-400 mb-6 leading-relaxed">Despeja tus dudas con expertos en sesiones privadas.</p>
+            <div className="flex items-center justify-between mb-4 border-t border-white/5 pt-4">
+              <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Costo: 100 pts · Tienes: {points} pts</span>
+            </div>
+            {points < 100 && (
+              <p className="text-[11px] text-neutral-400 mb-4 leading-relaxed">Aún no tienes los puntos necesarios.</p>
+            )}
+            <button 
+              onClick={handleOpenMentors}
+              disabled={points < 100 || (stellarNetwork?.toUpperCase() !== 'TESTNET' && !!stellarAddress)}
+              className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${points >= 100 && (stellarNetwork?.toUpperCase() === 'TESTNET' || !stellarAddress) ? 'bg-yellow-400 text-black hover:scale-[1.02]' : 'bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed'}`}
+            >
+              {points >= 100 ? 'Canjear mentoría' : 'Faltan puntos'}
+            </button>
           </div>
-        )}
-      </section>
+        </section>
+      ) : (
+        <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="mb-8">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-400 mb-2">Transparencia</p>
+            <h2 className="text-3xl font-black tracking-tighter uppercase leading-none">Historial Stellar</h2>
+            <p className="text-neutral-400 mt-2 text-sm">Tus recompensas on-chain y pruebas de canje en Stellar Testnet.</p>
+          </div>
+
+          {historyLoading ? (
+            <div className="animate-pulse flex space-x-4 p-8 bg-white/[0.02] rounded-[32px] border border-white/5">
+              <div className="flex-1 space-y-4 py-1">
+                <div className="h-4 bg-white/5 rounded w-3/4"></div>
+                <div className="h-4 bg-white/5 rounded"></div>
+              </div>
+            </div>
+          ) : history.length > 0 ? (
+            <div className="grid gap-4">
+              {history.map((item) => {
+                const mentor = MENTORS.find(m => m.id === item.mentor_id)
+                const date = new Date(item.created_at).toLocaleDateString('es-PE', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric'
+                })
+                return (
+                  <div key={item.id} className="group p-6 rounded-[24px] border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] transition-all flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-yellow-400/10 flex items-center justify-center text-yellow-400 shrink-0">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                      </div>
+                      <div>
+                        <h4 className="font-black text-white uppercase tracking-tight">Mentoría con {mentor?.name || item.mentor_id}</h4>
+                        <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">{date} • {item.points_spent} PTS Canjeados</p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col md:items-end gap-2">
+                      <div className="flex items-center gap-2 bg-emerald-400/5 px-3 py-1.5 rounded-full border border-emerald-400/10">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                        <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">+{item.reward_amount_xlm} XLM Demo</span>
+                      </div>
+                      {item.reward_tx_hash && (
+                        <a 
+                          href={`https://testnet.steexp.com/tx/${item.reward_tx_hash}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[10px] font-bold text-neutral-400 hover:text-white transition-colors flex items-center gap-1.5 group/link"
+                        >
+                          TX: {item.reward_tx_hash.slice(0, 8)}...{item.reward_tx_hash.slice(-8)}
+                          <svg className="w-3 h-3 opacity-50 group-hover/link:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div className="p-12 text-center rounded-[32px] border border-dashed border-white/10 bg-white/[0.01]">
+              <p className="text-neutral-500 text-sm mb-4">Todavía no tienes recompensas on-chain registradas.</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-600">Canjea una mentoría para ver aquí tus transacciones en Stellar Testnet.</p>
+            </div>
+          )}
+        </section>
+      )}
+
 
       {/* Modal de Mentores */}
       {isMentorModalOpen && (
