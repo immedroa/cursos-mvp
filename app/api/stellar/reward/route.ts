@@ -38,54 +38,53 @@ export async function POST(request: Request) {
     const sourceKeypair = StellarSdk.Keypair.fromSecret(houseSecret)
     const server = new StellarSdk.Horizon.Server('https://horizon-testnet.stellar.org')
 
-    // 4. Construir y enviar la transacción
+    // 4. Construir la transacción
+    const sourceAccount = await server.loadAccount(sourceKeypair.publicKey())
+    const transaction = new StellarSdk.TransactionBuilder(sourceAccount, {
+      fee: StellarSdk.BASE_FEE,
+      networkPassphrase: StellarSdk.Networks.TESTNET,
+    })
+      .addOperation(
+        StellarSdk.Operation.payment({
+          destination: profile.stellar_address,
+          asset: StellarSdk.Asset.native(),
+          amount: '1',
+        })
+      )
+      .setTimeout(30)
+      .build()
+
+    // 5. Firmar y enviar a Horizon Testnet
+    transaction.sign(sourceKeypair)
+
+    let result
     try {
-      const sourceAccount = await server.loadAccount(sourceKeypair.publicKey())
-      
-      const transaction = new StellarSdk.TransactionBuilder(sourceAccount, {
-        fee: StellarSdk.BASE_FEE,
-        networkPassphrase: StellarSdk.Networks.TESTNET,
-      })
-        .addOperation(
-          StellarSdk.Operation.payment({
-            destination: profile.stellar_address,
-            asset: StellarSdk.Asset.native(),
-            amount: '1', // 1 XLM Recompensa Demo
-          })
-        )
-        .setTimeout(30)
-        .build()
-
-      transaction.sign(sourceKeypair)
-      const result = await server.submitTransaction(transaction)
-      
-      const txHash = result.hash
-      const explorerUrl = `https://stellar.expert/explorer/testnet/tx/${txHash}`
-
-      // 5. Persistir el hash en mentor_redemptions (opcional pero recomendado)
-      if (mentorRedemptionId) {
-        await supabase
-          .from('mentor_redemptions')
-          .update({ 
-            reward_amount_xlm: 1,
-            reward_tx_hash: txHash 
-          })
-          .eq('id', mentorRedemptionId)
-      }
-
-      return NextResponse.json({ 
-        success: true, 
-        txHash, 
-        explorerUrl 
-      })
-
-    } catch (stellarError: any) {
-      console.error('Error en transacción Stellar:', stellarError?.response?.data || stellarError)
-      return NextResponse.json({ 
-        error: 'Error al enviar recompensa XLM', 
-        details: stellarError?.response?.data?.extras?.result_codes || 'Unknown error' 
-      }, { status: 500 })
+      result = await server.submitTransaction(transaction)
+    } catch (e: any) {
+      console.error('Error al enviar tx a Stellar:', e?.response?.data || e)
+      return NextResponse.json(
+        { success: false, error: 'submit_failed', details: e?.response?.data },
+        { status: 500 }
+      )
     }
+
+    const txHash = result.hash
+
+    // 6. Guardar el tx_hash en la tabla del canje para el historial
+    if (mentorRedemptionId) {
+      await supabase
+        .from('mentor_redemptions')
+        .update({ 
+          reward_amount_xlm: 1,
+          reward_tx_hash: txHash 
+        })
+        .eq('id', mentorRedemptionId)
+    }
+
+    // URL del explorer
+    const explorerUrl = `https://testnet.steexp.com/tx/${txHash}`
+
+    return NextResponse.json({ success: true, txHash, explorerUrl })
 
   } catch (error) {
     console.error('Error general en API reward:', error)

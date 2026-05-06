@@ -129,10 +129,20 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress 
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ mentorRedemptionId: redemptionId }),
         })
+
+        if (!rewardResponse.ok) {
+          console.error('Reward endpoint failed:', await rewardResponse.text())
+          throw new Error('Reward endpoint failed')
+        }
+
         const rewardData = await rewardResponse.json()
+
         if (rewardData.success) {
-          setLastRewardTx({ hash: rewardData.txHash, url: rewardData.explorerUrl })
-          fetchHistory() // Recargar historial tras canje exitoso
+          setLastRewardTx({ 
+            hash: rewardData.txHash, 
+            url: rewardData.explorerUrl 
+          })
+          fetchHistory() 
         }
       } catch (e) {
         console.error('Error al enviar recompensa XLM:', e)
