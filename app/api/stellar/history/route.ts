@@ -17,6 +17,7 @@ export async function GET() {
       .from('mentor_redemptions')
       .select('id, mentor_id, points_spent, reward_amount_xlm, reward_tx_hash, created_at')
       .eq('user_id', user.id)
+      .not('reward_tx_hash', 'is', null)
       .order('created_at', { ascending: false })
 
     if (error) {
