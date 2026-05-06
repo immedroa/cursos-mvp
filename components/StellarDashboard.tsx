@@ -6,6 +6,7 @@ import {
   requestAccess, 
   getNetworkDetails,
 } from '@stellar/freighter-api'
+import Image from 'next/image'
 
 interface Mentor {
   id: string
@@ -13,6 +14,7 @@ interface Mentor {
   specialty: string
   description: string
   bookingUrl: string
+  imageUrl: string
 }
 
 const MENTORS: Mentor[] = [
@@ -21,21 +23,24 @@ const MENTORS: Mentor[] = [
     name: 'Marcelo',
     specialty: 'Estrategia Web3 y producto',
     description: 'Aprende a estructurar tu modelo de negocio on-chain y definir el roadmap de tu dapp.',
-    bookingUrl: 'https://calendar.google.com/calendar/u/0/appointments/schedules/example-marcelo'
+    bookingUrl: 'https://calendar.google.com/calendar/u/0/appointments/schedules/example-marcelo',
+    imageUrl: '/mentors/marcelo.png'
   },
   {
     id: 'mentora-ux',
     name: 'Mentora UX',
     specialty: 'UX para dapps y educación Web3',
     description: 'Optimiza el flujo de onboarding y la retención de usuarios en entornos descentralizados.',
-    bookingUrl: 'https://calendar.google.com/calendar/u/0/appointments/schedules/example-ux'
+    bookingUrl: 'https://calendar.google.com/calendar/u/0/appointments/schedules/example-ux',
+    imageUrl: '/mentors/mentora-ux.png'
   },
   {
     id: 'dev-solidity',
     name: 'Dev Solidity',
     specialty: 'Smart contracts y seguridad básica',
     description: 'Revisión de lógica de contratos, seguridad en Solidity y despliegue en redes EVM/Stellar.',
-    bookingUrl: 'https://calendar.google.com/calendar/u/0/appointments/schedules/example-dev'
+    bookingUrl: 'https://calendar.google.com/calendar/u/0/appointments/schedules/example-dev',
+    imageUrl: '/mentors/dev-solidity.png'
   }
 ]
 
@@ -358,12 +363,23 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
             <div className="grid gap-4">
               {MENTORS.map(mentor => (
                 <div key={mentor.id} className="p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:border-yellow-400/30 transition-all group">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  <div className="flex flex-col md:flex-row md:items-center gap-6">
+                    <div className="relative w-20 h-20 shrink-0">
+                      <Image 
+                        src={mentor.imageUrl} 
+                        alt={mentor.name} 
+                        fill
+                        className="object-cover rounded-2xl grayscale group-hover:grayscale-0 transition-all duration-500"
+                      />
+                      <div className="absolute inset-0 rounded-2xl border border-white/10 group-hover:border-yellow-400/30 transition-colors"></div>
+                    </div>
+                    
                     <div className="flex-grow">
                       <h4 className="text-lg font-black tracking-tight mb-1">{mentor.name}</h4>
                       <p className="text-[10px] font-bold text-yellow-400 uppercase tracking-widest mb-3">{mentor.specialty}</p>
                       <p className="text-sm text-neutral-400 leading-relaxed">{mentor.description}</p>
                     </div>
+                    
                     <button 
                       onClick={() => handleSelectMentor(mentor)}
                       disabled={!!redeemingId}
