@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import StellarDashboard from '@/components/StellarDashboard'
 
 export const dynamic = 'force-dynamic'
 

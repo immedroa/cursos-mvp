@@ -1,3 +1,6 @@
+import Link from 'next/link'
+import Image from 'next/image'
+import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import LessonButton from '@/components/LessonButton'
 
