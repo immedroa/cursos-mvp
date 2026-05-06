@@ -56,6 +56,7 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
   const [history, setHistory] = useState<any[]>([])
   const [historyLoading, setHistoryLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'AULA' | 'HISTORIAL'>('AULA')
+  const [showConfirmation, setShowConfirmation] = useState(false)
 
   const fetchHistory = async () => {
     try {
@@ -153,10 +154,8 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
       // Actualizar puntos localmente
       setPoints(prev => prev - 100)
       
-      // Abrir calendario
-      window.open(mentor.bookingUrl, '_blank', 'noopener,noreferrer')
-      
-      alert('¡Mentoría canjeada con éxito! Revisa el calendario para elegir tu horario. Además, hemos enviado 1 XLM de recompensa a tu wallet Testnet.')
+      // Mostrar modal de confirmación en lugar de alert/window.open inmediato
+      setShowConfirmation(true)
       setIsMentorModalOpen(false)
     } catch (error) {
       console.error('Error al canjear mentoría:', error)
@@ -395,6 +394,44 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
             )}
 
             <p className="mt-8 text-center text-[10px] text-neutral-600 uppercase tracking-[0.2em]">Costo del canje: 100 puntos</p>
+          </div>
+        </div>
+      )}
+      {/* Modal de Confirmación de Éxito */}
+      {showConfirmation && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-black/90 backdrop-blur-md" onClick={() => setShowConfirmation(false)}></div>
+          <div className="relative w-full max-w-md bg-[#0A0A0A] border border-yellow-400/30 rounded-[40px] p-10 text-center shadow-[0_0_50px_rgba(250,204,21,0.1)] animate-in zoom-in-95 duration-300">
+            <div className="w-20 h-20 bg-yellow-400 rounded-full flex items-center justify-center mx-auto mb-8 shadow-[0_0_30px_rgba(250,204,21,0.3)]">
+              <svg className="w-10 h-10 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            
+            <h2 className="text-3xl font-black tracking-tighter uppercase mb-4">Mentoría 1:1 canjeada con éxito</h2>
+            <p className="text-neutral-400 text-sm leading-relaxed mb-10">
+              Ya registramos tu canje en la red Stellar Testnet y lo verás reflejado en tu Historial Stellar. El siguiente paso es agendar el día y hora de tu sesión privada.
+            </p>
+
+            <div className="space-y-4">
+              <a 
+                href="https://calendar.app.google/iB2gxQXXSwapTaPD8"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full bg-yellow-400 text-black py-4 rounded-2xl font-black text-sm hover:scale-[1.02] transition-transform shadow-xl shadow-yellow-400/10 uppercase tracking-widest"
+              >
+                Agendar mi mentoría
+              </a>
+              <button 
+                onClick={() => {
+                  setShowConfirmation(false)
+                  setActiveTab('HISTORIAL')
+                  // Scroll suave al inicio del historial
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+                className="block w-full py-4 text-[10px] font-black text-neutral-500 hover:text-white uppercase tracking-[0.2em] transition-colors"
+              >
+                Agendar más tarde
+              </button>
+            </div>
           </div>
         </div>
       )}
