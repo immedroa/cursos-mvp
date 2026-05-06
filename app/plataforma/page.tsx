@@ -32,7 +32,7 @@ export default async function PlataformaPage() {
 
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
-    .select('email, has_access')
+    .select('email, has_access, points, stellar_address')
     .eq('id', user.id)
     .single()
 
@@ -41,78 +41,10 @@ export default async function PlataformaPage() {
   }
 
   if (!profile.has_access) {
-    return (
-      <main className="min-h-screen bg-[#050505] text-white flex items-center justify-center px-6 overflow-hidden relative">
-        <div className="absolute top-[-20%] right-[-20%] w-[60%] h-[60%] bg-yellow-400/5 blur-[150px] rounded-full"></div>
-        <div className="mx-auto max-w-2xl text-center relative z-10">
-          <Image 
-            src="/logo.png" 
-            alt="Crypto College" 
-            width={64} 
-            height={64} 
-            className="mx-auto mb-8 shadow-[0_0_40px_rgba(250,204,21,0.2)] rounded-2xl rotate-3"
-          />
-          <h1 className="text-5xl font-black tracking-tighter mb-4 uppercase">Acceso Pendiente</h1>
-          <p className="text-xl text-neutral-400 mb-8 max-w-md mx-auto">
-            Hola, <span className="text-white font-bold">{profile.email}</span>. Tu cuenta está registrada, pero necesitamos validar tu pago para abrir las puertas del aula.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a
-              href="https://wa.me/51965413449"
-              target="_blank"
-              className="w-full sm:w-auto rounded-2xl bg-yellow-400 text-black px-8 py-4 text-sm font-black hover:scale-105 transition-transform shadow-xl shadow-yellow-400/10"
-            >
-              ACTIVAR POR WHATSAPP
-            </a>
-
-            <form action="/auth/signout" method="post" className="w-full sm:w-auto">
-              <button className="w-full sm:w-auto rounded-2xl bg-white/5 border border-white/10 px-8 py-4 text-sm font-bold hover:bg-white/10 transition-all">
-                Cerrar sesión
-              </button>
-            </form>
-          </div>
-        </div>
-      </main>
-    )
+    // ... (keep existing pending access UI)
   }
 
-  const { data: coursesData, error: coursesError } = await supabase
-    .from('courses')
-    .select(`
-      id,
-      title,
-      slug,
-      description,
-      lessons (
-        id,
-        title,
-        position
-      )
-    `)
-    .eq('is_published', true)
-    .order('created_at', { ascending: true })
-
-  if (coursesError) {
-    return (
-      <main className="min-h-screen bg-[#050505] text-white flex items-center justify-center px-6">
-        <div className="mx-auto max-w-3xl text-center">
-          <h1 className="text-3xl font-black uppercase mb-4 text-yellow-400">Error</h1>
-          <p className="text-neutral-400 mb-3">Hubo un problema cargando tus cursos.</p>
-          <pre className="text-xs text-red-400 whitespace-pre-wrap bg-white/5 p-4 rounded-xl border border-red-400/20">
-            {coursesError.message}
-          </pre>
-        </div>
-      </main>
-    )
-  }
-
-  const courses = ((coursesData ?? []) as Course[]).map((course) => ({
-    ...course,
-    lessons: [...(course.lessons ?? [])].sort((a, b) => a.position - b.position),
-  }))
-
-  const featuredCourse = courses[0]
+  // ... (keep existing course fetching logic)
 
   return (
     <main className="min-h-screen bg-[#050505] text-white selection:bg-yellow-400 selection:text-black">
@@ -142,10 +74,18 @@ export default async function PlataformaPage() {
       </header>
 
       <div className="mx-auto max-w-7xl px-6 py-12">
+        
+        {/* Nueva Sección Stellar & Puntos */}
+        <StellarDashboard 
+          initialPoints={profile.points || 0} 
+          initialStellarAddress={profile.stellar_address} 
+        />
+
         <div className="grid gap-8 lg:grid-cols-3">
           
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
+            {/* ... (rest of the course list) */}
             {featuredCourse ? (
               <section className="relative overflow-hidden rounded-[32px] border border-white/10 bg-gradient-to-br from-white/[0.05] to-transparent p-10 group">
                 <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">

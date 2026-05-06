@@ -1,7 +1,5 @@
-import Link from 'next/link'
-import Image from 'next/image'
-import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import LessonButton from '@/components/LessonButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,6 +9,7 @@ type Lesson = {
   description: string | null
   position: number
   video_url: string | null
+  is_rewarded?: boolean // Campo virtual para la UI
 }
 
 type Course = {
@@ -39,7 +38,7 @@ export default async function CoursePage({
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('email, has_access')
+    .select('email, has_access, points')
     .eq('id', user.id)
     .single()
 
@@ -74,9 +73,21 @@ export default async function CoursePage({
     notFound()
   }
 
-  const lessons = [...(course.lessons ?? [])].sort((a, b) => a.position - b.position)
+  // 1. Obtener los IDs de las lecciones que ya tienen recompensa para este usuario
+  const { data: userRewards } = await supabase
+    .from('lesson_rewards')
+    .select('lesson_id')
+    .eq('user_id', user.id)
+
+  const rewardedIds = new Set(userRewards?.map(r => r.lesson_id) || [])
+
+  const lessons = [...(course.lessons ?? [])]
+    .sort((a, b) => a.position - b.position)
+    .map(lesson => ({
+      ...lesson,
+      is_rewarded: rewardedIds.has(lesson.id)
+    }))
   
-  // Buscar la primera cápsula con video disponible para el botón principal
   const firstPlayableLesson = lessons.find(l => l.video_url !== null)
 
   return (
@@ -92,7 +103,10 @@ export default async function CoursePage({
               height={32} 
               className="rounded-lg shadow-[0_0_10px_rgba(250,204,21,0.1)]"
             />
-            <h1 className="text-lg font-black tracking-tighter uppercase hidden sm:block">Mi Aula</h1>
+            <div className="flex flex-col">
+              <h1 className="text-sm font-black tracking-tighter uppercase leading-none">Mi Aula</h1>
+              <span className="text-[9px] font-bold text-yellow-400/80 tracking-widest mt-0.5 uppercase">{profile.points || 0} PTS ACUMULADOS</span>
+            </div>
           </div>
 
           <Link
@@ -122,7 +136,6 @@ export default async function CoursePage({
               </div>
             </div>
 
-            {/* 5. Lógica de utilidad real: Acción principal en el hero */}
             {firstPlayableLesson && (
               <a
                 href={firstPlayableLesson.video_url!}
@@ -146,30 +159,40 @@ export default async function CoursePage({
                 key={lesson.id}
                 className="rounded-3xl border border-white/10 bg-white/[0.02] p-8 hover:border-yellow-400/40 transition-all group flex flex-col md:flex-row gap-8 items-start md:items-center relative overflow-hidden"
               >
-                {/* 3. Número de cápsula, título, descripción */}
+                {/* Indicador de posición */}
                 <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-xl font-black text-neutral-500 group-hover:text-yellow-400 transition-colors">
                   {lesson.position}
                 </div>
 
                 <div className="flex-grow">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500 mb-2">Cápsula {lesson.position}</p>
+                  <div className="flex items-center gap-3 mb-2">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500">Cápsula {lesson.position}</p>
+                    {lesson.video_url && (
+                      lesson.is_rewarded ? (
+                        <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-400/10 px-2 py-0.5 rounded-full border border-emerald-400/20">
+                          ✓ Recompensa Obtenida
+                        </span>
+                      ) : (
+                        <span className="text-[9px] font-black text-yellow-400 uppercase tracking-widest bg-yellow-400/10 px-2 py-0.5 rounded-full border border-yellow-400/20">
+                          +50 Puntos
+                        </span>
+                      )
+                    )}
+                  </div>
                   <h3 className="text-2xl font-bold mb-3 tracking-tight">{lesson.title}</h3>
                   <p className="text-sm text-neutral-400 leading-relaxed max-w-xl">
                     {lesson.description || 'Contenido disponible dentro de la plataforma.'}
                   </p>
                 </div>
 
-                {/* 4. Acción principal por cápsula */}
+                {/* Acción principal por cápsula */}
                 <div className="flex-shrink-0 w-full md:w-auto mt-4 md:mt-0">
                   {lesson.video_url ? (
-                    <a
-                      href={lesson.video_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block w-full text-center bg-white text-black px-8 py-4 rounded-2xl font-black text-sm hover:bg-yellow-400 transition-colors shadow-lg"
-                    >
-                      VER CONTENIDO
-                    </a>
+                    <LessonButton 
+                      lessonId={lesson.id} 
+                      videoUrl={lesson.video_url} 
+                      isRewarded={!!lesson.is_rewarded} 
+                    />
                   ) : (
                     <button
                       disabled
