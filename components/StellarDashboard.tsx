@@ -5,7 +5,6 @@ import {
   isConnected, 
   getPublicKey, 
 } from '@stellar/freighter-api'
-import { saveStellarAddress } from '@/app/actions/stellar'
 
 interface StellarDashboardProps {
   initialPoints: number
@@ -39,11 +38,21 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress 
         throw new Error('No se pudo obtener la llave pública')
       }
 
-      // 3. Persistir en Supabase via Server Action
-      await saveStellarAddress(publicKey)
+      // 3. Persistir en Supabase via API Route
+      const response = await fetch('/api/stellar/address', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ address: publicKey }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Error al guardar la dirección en el servidor')
+      }
       
       setStellarAddress(publicKey)
-      console.log('Wallet conectada y guardada:', publicKey)
+      console.log('Wallet conectada y guardada via API:', publicKey)
     } catch (error) {
       console.error('Error al conectar wallet:', error)
       alert('Hubo un problema al conectar con Freighter. Asegúrate de haber iniciado sesión en la extensión.')
