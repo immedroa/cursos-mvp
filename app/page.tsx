@@ -83,14 +83,17 @@ export default async function LandingPage() {
           
           <div className="flex items-center gap-4">
             <div className="flex -space-x-3">
-              {[1, 2, 3, 4].map(i => (
+              {[1, 2, 3].map(i => (
                 <div key={i} className="w-10 h-10 rounded-full border-2 border-[#050505] bg-neutral-800 overflow-hidden relative">
-                  <Image src={i === 1 ? '/avatars/marcelo.png' : `/mentors/mentora-ux.png`} alt="User" fill className="object-cover" />
+                  <Image src={`/avatars/student-${i}.png`} alt={`Student ${i}`} fill className="object-cover" />
                 </div>
               ))}
+              <div className="w-10 h-10 rounded-full border-2 border-[#050505] bg-yellow-400 flex items-center justify-center text-[10px] font-black text-black relative z-10">
+                +500
+              </div>
             </div>
-            <div className="text-[10px] font-black text-neutral-500 uppercase tracking-widest text-left">
-              <span className="text-white block font-black underline decoration-yellow-400 decoration-2 underline-offset-4">+500 PROFESIONALES</span> 
+            <div className="text-[10px] font-black text-neutral-500 uppercase tracking-widest text-left leading-tight">
+              <span className="text-white block">PROFESIONALES</span> 
               YA ESTÁN DENTRO
             </div>
           </div>
