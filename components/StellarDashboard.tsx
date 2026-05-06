@@ -20,7 +20,7 @@ interface Mentor {
 const MENTORS: Mentor[] = [
   {
     id: 'marcelo',
-    name: 'Marcelo',
+    name: 'Marcelo Medroa',
     specialty: 'Estrategia Web3 y producto',
     description: 'Aprende a estructurar tu modelo de negocio on-chain y definir el roadmap de tu dapp.',
     bookingUrl: 'https://calendar.google.com/calendar/u/0/appointments/schedules/example-marcelo',
