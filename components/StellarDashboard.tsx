@@ -52,8 +52,23 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress 
   const [isMentorModalOpen, setIsMentorModalOpen] = useState(false)
   const [redeemingId, setRedeemingId] = useState<string | null>(null)
   const [lastRewardTx, setLastRewardTx] = useState<{ hash: string, url: string } | null>(null)
+  const [history, setHistory] = useState<any[]>([])
+  const [historyLoading, setHistoryLoading] = useState(true)
+
+  const fetchHistory = async () => {
+    try {
+      const response = await fetch('/api/stellar/history')
+      const data = await response.json()
+      if (data.history) setHistory(data.history)
+    } catch (error) {
+      console.error('Error fetching history:', error)
+    } finally {
+      setHistoryLoading(false)
+    }
+  }
 
   useEffect(() => {
+    fetchHistory()
     setStellarAddress(initialStellarAddress)
     if (initialStellarAddress) {
       getNetworkDetails().then(details => {
@@ -117,6 +132,7 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress 
         const rewardData = await rewardResponse.json()
         if (rewardData.success) {
           setLastRewardTx({ hash: rewardData.txHash, url: rewardData.explorerUrl })
+          fetchHistory() // Recargar historial tras canje exitoso
         }
       } catch (e) {
         console.error('Error al enviar recompensa XLM:', e)
@@ -142,7 +158,7 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress 
 
   return (
     <>
-      <section className="grid gap-6 md:grid-cols-3 mb-12">
+      <section className="grid gap-6 md:grid-cols-3 mb-16">
         {/* A) Bloque "Mis puntos" */}
         <div className="p-8 rounded-[32px] border border-white/10 bg-white/[0.02] relative overflow-hidden group hover:border-yellow-400/30 transition-all">
           <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-400/5 blur-2xl"></div>
@@ -217,6 +233,71 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress 
             {points >= 100 ? 'Canjear mentoría' : 'Faltan puntos'}
           </button>
         </div>
+      </section>
+
+      {/* D) Nueva Sección: Historial Stellar */}
+      <section className="mt-16">
+        <div className="mb-8">
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-400 mb-2">Transparencia</p>
+          <h2 className="text-3xl font-black tracking-tighter uppercase leading-none">Historial Stellar</h2>
+          <p className="text-neutral-400 mt-2 text-sm">Tus recompensas on-chain y pruebas de canje en Stellar Testnet.</p>
+        </div>
+
+        {historyLoading ? (
+          <div className="animate-pulse flex space-x-4 p-8 bg-white/[0.02] rounded-[32px] border border-white/5">
+            <div className="flex-1 space-y-4 py-1">
+              <div className="h-4 bg-white/5 rounded w-3/4"></div>
+              <div className="h-4 bg-white/5 rounded"></div>
+            </div>
+          </div>
+        ) : history.length > 0 ? (
+          <div className="grid gap-4">
+            {history.map((item) => {
+              const mentor = MENTORS.find(m => m.id === item.mentor_id)
+              const date = new Date(item.created_at).toLocaleDateString('es-PE', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+              })
+              return (
+                <div key={item.id} className="group p-6 rounded-[24px] border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] transition-all flex flex-col md:flex-row md:items-center justify-between gap-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-yellow-400/10 flex items-center justify-center text-yellow-400 shrink-0">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div>
+                      <h4 className="font-black text-white uppercase tracking-tight">Mentoría con {mentor?.name || item.mentor_id}</h4>
+                      <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">{date} • {item.points_spent} PTS Canjeados</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col md:items-end gap-2">
+                    <div className="flex items-center gap-2 bg-emerald-400/5 px-3 py-1.5 rounded-full border border-emerald-400/10">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                      <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">+{item.reward_amount_xlm} XLM Demo</span>
+                    </div>
+                    {item.reward_tx_hash && (
+                      <a 
+                        href={`https://stellar.expert/explorer/testnet/tx/${item.reward_tx_hash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[10px] font-bold text-neutral-400 hover:text-white transition-colors flex items-center gap-1.5 group/link"
+                      >
+                        TX: {item.reward_tx_hash.slice(0, 8)}...{item.reward_tx_hash.slice(-8)}
+                        <svg className="w-3 h-3 opacity-50 group-hover/link:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="p-12 text-center rounded-[32px] border border-dashed border-white/10 bg-white/[0.01]">
+            <p className="text-neutral-500 text-sm mb-4">Todavía no tienes recompensas on-chain registradas.</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-600">Canjea una mentoría para ver aquí tus transacciones en Stellar Testnet.</p>
+          </div>
+        )}
       </section>
 
       {/* Modal de Mentores */}
