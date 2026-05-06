@@ -95,16 +95,31 @@ export async function POST(request: Request) {
 
     // 6. Guardar el tx_hash en la tabla del canje para el historial
     if (mentorRedemptionId) {
-      console.log('[REWARD] Actualizando registro de canje en Supabase:', mentorRedemptionId)
-      const { error: updateError } = await supabase
+      console.log(`[REWARD] Intentando actualizar Supabase para ID: ${mentorRedemptionId} con TX: ${txHash}`)
+      const { error: updateError, data } = await supabase
         .from('mentor_redemptions')
         .update({ 
           reward_amount_xlm: 1,
           reward_tx_hash: txHash 
         })
         .eq('id', mentorRedemptionId)
+        .select()
       
-      if (updateError) console.error('[REWARD] Error al actualizar Supabase:', updateError)
+      if (updateError) {
+        console.error('[REWARD] ERROR detallado de Supabase:', JSON.stringify(updateError, null, 2))
+        return NextResponse.json(
+          { success: false, error: 'database_update_failed', details: updateError, txHash },
+          { status: 500 }
+        )
+      }
+
+      if (!data || data.length === 0) {
+        console.warn(`[REWARD] ADVERTENCIA: No se encontró ninguna fila con ID ${mentorRedemptionId} para actualizar o RLS bloqueó la operación.`)
+      } else {
+        console.log('[REWARD] Supabase actualizado correctamente:', data[0].id)
+      }
+    } else {
+      console.warn('[REWARD] No se recibió mentorRedemptionId en el body')
     }
 
     // URL del explorer
