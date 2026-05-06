@@ -51,6 +51,7 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress 
   const [loading, setLoading] = useState(false)
   const [isMentorModalOpen, setIsMentorModalOpen] = useState(false)
   const [redeemingId, setRedeemingId] = useState<string | null>(null)
+  const [lastRewardTx, setLastRewardTx] = useState<{ hash: string, url: string } | null>(null)
 
   useEffect(() => {
     setStellarAddress(initialStellarAddress)
@@ -104,6 +105,22 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress 
       })
 
       if (!response.ok) throw new Error('Error al procesar el canje')
+      const { redemptionId } = await response.json()
+
+      // 2. Disparar recompensa en XLM (Background)
+      try {
+        const rewardResponse = await fetch('/api/stellar/reward', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mentorRedemptionId: redemptionId }),
+        })
+        const rewardData = await rewardResponse.json()
+        if (rewardData.success) {
+          setLastRewardTx({ hash: rewardData.txHash, url: rewardData.explorerUrl })
+        }
+      } catch (e) {
+        console.error('Error al enviar recompensa XLM:', e)
+      }
 
       // Actualizar puntos localmente
       setPoints(prev => prev - 100)
@@ -111,7 +128,7 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress 
       // Abrir calendario
       window.open(mentor.bookingUrl, '_blank', 'noopener,noreferrer')
       
-      alert('¡Mentoría canjeada con éxito! Revisa el calendario para elegir tu horario.')
+      alert('¡Mentoría canjeada con éxito! Revisa el calendario para elegir tu horario. Además, hemos enviado 1 XLM de recompensa a tu wallet Testnet.')
       setIsMentorModalOpen(false)
     } catch (error) {
       console.error('Error al canjear mentoría:', error)
@@ -237,6 +254,24 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress 
                 </div>
               ))}
             </div>
+
+            {lastRewardTx && (
+              <div className="mt-8 p-4 rounded-2xl border border-emerald-400/20 bg-emerald-400/5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                  <p className="text-[11px] font-bold text-emerald-400 uppercase tracking-widest">Recompensa enviada: 1 XLM</p>
+                </div>
+                <a 
+                  href={lastRewardTx.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-[10px] font-black text-white hover:text-emerald-400 underline uppercase tracking-widest transition-colors"
+                >
+                  Ver TX: {lastRewardTx.hash.slice(0, 8)}...
+                </a>
+              </div>
+            )}
+
             <p className="mt-8 text-center text-[10px] text-neutral-600 uppercase tracking-[0.2em]">Costo del canje: 100 puntos</p>
           </div>
         </div>

@@ -20,21 +20,22 @@ export async function POST(request: Request) {
     }
 
     // 1. Insertar el registro de canje
-    const { error: redemptionError } = await supabase
+    const { data: redemption, error: redemptionError } = await supabase
       .from('mentor_redemptions')
       .insert({
         user_id: user.id,
         mentor_id: mentorId,
         points_spent: pointsSpent || 100,
       })
+      .select('id')
+      .single()
 
-    if (redemptionError) {
+    if (redemptionError || !redemption) {
       console.error('Error al registrar canje de mentoría:', redemptionError)
       return NextResponse.json({ error: 'Error al procesar el canje' }, { status: 500 })
     }
 
-    // 2. Descontar los puntos del perfil (Usando el mismo RPC pero con valor negativo)
-    // Nota: El RPC increment_points(amount) suma el valor. Para restar, pasamos -100.
+    // 2. Descontar los puntos del perfil
     const { error: pointsError } = await supabase
       .rpc('increment_points', { 
         amount: -(pointsSpent || 100)
@@ -42,10 +43,9 @@ export async function POST(request: Request) {
 
     if (pointsError) {
       console.error('Error al descontar puntos:', pointsError)
-      // Podríamos decidir si revertir el insert anterior, pero para MVP lo dejamos así.
     }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, redemptionId: redemption.id })
   } catch (error) {
     console.error('Error en API route mentorship:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
