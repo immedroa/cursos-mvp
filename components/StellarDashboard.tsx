@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { 
   isConnected, 
-  getPublicKey, 
+  requestAccess, 
 } from '@stellar/freighter-api'
 
 interface StellarDashboardProps {
@@ -32,10 +32,10 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress 
       }
 
       // 2. Obtener la llave pública (esto dispara el popup de Freighter)
-      const publicKey = await getPublicKey()
+      const { address: publicKey, error: freighterError } = await requestAccess()
       
-      if (!publicKey) {
-        throw new Error('No se pudo obtener la llave pública')
+      if (freighterError || !publicKey) {
+        throw new Error(freighterError || 'No se pudo obtener la llave pública')
       }
 
       // 3. Persistir en Supabase via API Route
