@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { claimLessonReward } from '@/app/actions/rewards'
+// import { claimLessonReward } from '@/app/actions/rewards' // Removido para evitar mezcla cliente/servidor
 
 interface LessonButtonProps {
   lessonId: string
@@ -17,8 +17,21 @@ export default function LessonButton({ lessonId, videoUrl, isRewarded }: LessonB
     setLoading(true)
 
     try {
-      // Llamar a la acción para registrar la recompensa
-      await claimLessonReward(lessonId)
+      // Llamar a la API route para registrar la recompensa
+      const response = await fetch('/api/rewards/claim', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ lessonId }),
+      })
+      
+      if (!response.ok) {
+        console.warn('Error en la respuesta de recompensa')
+      } else {
+        const data = await response.json()
+        console.log('Recompensa procesada:', data)
+      }
       
       // Abrir el video en una nueva pestaña
       window.open(videoUrl, '_blank', 'noopener,noreferrer')
