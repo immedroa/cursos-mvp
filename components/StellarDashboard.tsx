@@ -77,10 +77,13 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress 
         <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-400/5 blur-2xl"></div>
         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 mb-2">Acumulados</p>
         <h3 className="text-xl font-black mb-4 uppercase tracking-tight">Mis Puntos</h3>
-        <div className="flex items-end gap-2">
+        <div className="flex items-end gap-2 mb-4">
           <span className="text-4xl font-black text-yellow-400 leading-none">{points}</span>
           <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest pb-1">PTS</span>
         </div>
+        <p className="text-[11px] text-neutral-400 leading-relaxed">
+          Gana puntos participando en cursos, retos y eventos para impulsar tu progreso en el ecosistema Web3.
+        </p>
       </div>
 
       {/* B) Bloque "Mi wallet Stellar" */}
@@ -96,7 +99,9 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress 
           </div>
         ) : (
           <div className="space-y-4">
-            <p className="text-xs text-neutral-400">Aún no has conectado tu wallet de Stellar.</p>
+            <p className="text-xs text-neutral-400 leading-relaxed">
+              Conecta tu wallet para habilitar recompensas on-chain y canjear tus puntos por beneficios reales.
+            </p>
             <button 
               onClick={handleConnectWallet}
               disabled={loading}
@@ -106,7 +111,7 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress 
                 : 'bg-white text-black hover:bg-yellow-400'
               }`}
             >
-              {loading ? 'Conectando...' : 'Conectar Wallet'}
+              {loading ? 'Conectando...' : 'Conectar mi wallet'}
             </button>
           </div>
         )}
@@ -116,12 +121,21 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress 
       <div className="p-8 rounded-[32px] border border-yellow-400/20 bg-yellow-400/5 relative overflow-hidden group hover:border-yellow-400/40 transition-all">
         <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-400 mb-2">Exclusivo</p>
         <h3 className="text-xl font-black mb-4 uppercase tracking-tight">Mentoría 1:1</h3>
-        <p className="text-xs text-neutral-400 mb-6 leading-relaxed">Canjea tus puntos por una sesión de mentoría personalizada.</p>
+        <p className="text-xs text-neutral-400 mb-6 leading-relaxed">
+          Despeja tus dudas de carrera o proyectos en una sesión 1:1 privada con un mentor experto en Web3.
+        </p>
         
-        <div className="flex items-center justify-between mb-4">
-          <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Costo: 100 PTS</span>
-          <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Tienes: {points}</span>
+        <div className="flex items-center justify-between mb-4 border-t border-white/5 pt-4">
+          <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
+            Costo: 100 pts · Tienes: {points} pts
+          </span>
         </div>
+
+        {points < 100 && (
+          <p className="text-[11px] text-neutral-400 mb-4 leading-relaxed">
+            Sigue aprendiendo para acumular los puntos necesarios y desbloquear esta sesión.
+          </p>
+        )}
 
         <button 
           onClick={handleRedeemMentorship}
@@ -132,7 +146,7 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress 
               : 'bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed'
           }`}
         >
-          {points >= 100 ? 'Canjear Mentoría' : 'Faltan Puntos'}
+          {points >= 100 ? 'Canjear mentoría' : 'Faltan puntos'}
         </button>
       </div>
     </section>
