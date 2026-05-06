@@ -412,14 +412,14 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
             </p>
 
             <div className="space-y-4">
-              <a 
-                href="https://calendar.app.google/iB2gxQXXSwapTaPD8"
-                target="_blank"
-                rel="noopener noreferrer"
+              <button 
+                onClick={() => {
+                  window.open("https://calendar.app.google/iB2gxQXXSwapTaPD8", "_blank", "noopener,noreferrer")
+                }}
                 className="block w-full bg-yellow-400 text-black py-4 rounded-2xl font-black text-sm hover:scale-[1.02] transition-transform shadow-xl shadow-yellow-400/10 uppercase tracking-widest"
               >
                 Agendar mi mentoría
-              </a>
+              </button>
               <button 
                 onClick={() => {
                   setShowConfirmation(false)
