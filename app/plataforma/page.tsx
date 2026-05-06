@@ -128,7 +128,11 @@ export default async function PlataformaPage() {
               height={32} 
               className="rounded-lg shadow-[0_0_10px_rgba(250,204,21,0.1)]"
             />
-            <h1 className="text-lg font-black tracking-tighter uppercase">Mi Aula</h1>
+            <h1 className="text-sm font-black tracking-[0.2em] uppercase">
+              <span className="text-white/40">Crypto College</span>
+              <span className="mx-2 text-yellow-400/50">|</span>
+              <span className="text-white">Dashboard</span>
+            </h1>
           </div>
 
           <div className="flex items-center gap-6">
