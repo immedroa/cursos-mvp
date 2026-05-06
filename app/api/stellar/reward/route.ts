@@ -95,8 +95,12 @@ export async function POST(request: Request) {
 
     // 6. Guardar el tx_hash en la tabla del canje para el historial
     if (mentorRedemptionId) {
-      console.log(`[REWARD] Intentando actualizar Supabase para ID: ${mentorRedemptionId} con TX: ${txHash}`)
-      const { error: updateError, data } = await supabase
+      console.log(`[REWARD] Intentando actualizar Supabase (ADMIN) para ID: ${mentorRedemptionId} con TX: ${txHash}`)
+      
+      const { createAdminClient } = await import('@/lib/supabase/admin')
+      const supabaseAdmin = createAdminClient()
+
+      const { error: updateError, data } = await supabaseAdmin
         .from('mentor_redemptions')
         .update({ 
           reward_amount_xlm: 1,
@@ -106,7 +110,7 @@ export async function POST(request: Request) {
         .select()
       
       if (updateError) {
-        console.error('[REWARD] ERROR detallado de Supabase:', JSON.stringify(updateError, null, 2))
+        console.error('[REWARD] ERROR detallado de Supabase (ADMIN):', JSON.stringify(updateError, null, 2))
         return NextResponse.json(
           { success: false, error: 'database_update_failed', details: updateError, txHash },
           { status: 500 }
@@ -114,11 +118,12 @@ export async function POST(request: Request) {
       }
 
       if (!data || data.length === 0) {
-        console.warn(`[REWARD] ADVERTENCIA: No se encontró ninguna fila con ID ${mentorRedemptionId} para actualizar o RLS bloqueó la operación.`)
+        console.warn(`[REWARD] ADVERTENCIA (ADMIN): No se encontró ninguna fila con ID ${mentorRedemptionId} para actualizar. Verifique si el ID es correcto.`)
       } else {
-        console.log('[REWARD] Supabase actualizado correctamente:', data[0].id)
+        console.log('[REWARD] Supabase actualizado correctamente vía ADMIN:', data[0].id)
       }
-    } else {
+    }
+ else {
       console.warn('[REWARD] No se recibió mentorRedemptionId en el body')
     }
 
