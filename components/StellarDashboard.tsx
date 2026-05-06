@@ -42,9 +42,10 @@ const MENTORS: Mentor[] = [
 interface StellarDashboardProps {
   initialPoints: number
   initialStellarAddress: string | null
+  children?: React.ReactNode
 }
 
-export default function StellarDashboard({ initialPoints, initialStellarAddress }: StellarDashboardProps) {
+export default function StellarDashboard({ initialPoints, initialStellarAddress, children }: StellarDashboardProps) {
   const [points, setPoints] = useState(initialPoints)
   const [stellarAddress, setStellarAddress] = useState(initialStellarAddress)
   const [stellarNetwork, setStellarNetwork] = useState<string | null>(null)
@@ -272,8 +273,10 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress 
             </button>
           </div>
         </section>
-      ) : (
-        <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+        {activeTab === 'AULA' && children}
+      </>
+    ) : (
+      <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="mb-8">
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-400 mb-2">Transparencia</p>
             <h2 className="text-3xl font-black tracking-tighter uppercase leading-none">Historial Stellar</h2>
