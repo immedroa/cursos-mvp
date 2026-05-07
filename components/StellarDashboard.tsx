@@ -117,8 +117,29 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
   const handleConnectWallet = async () => {
     setLoading(true)
     try {
-      // 1. Detección de Freighter
-      if (!await isConnected()) {
+      // 1. Detección robusta de Freighter con timeout
+      const checkFreighter = async () => {
+        // Intento 1: Detección directa del objeto inyectado
+        if (typeof window !== 'undefined' && (window as any).freighterApi) {
+          return true;
+        }
+        
+        // Intento 2: Usar la función de la librería con timeout de 1.5s
+        const timeoutPromise = new Promise<boolean>((resolve) => 
+          setTimeout(() => resolve(false), 1500)
+        );
+        
+        try {
+          return await Promise.race([isConnected(), timeoutPromise]);
+        } catch (e) {
+          return false;
+        }
+      };
+
+      const isAvailable = await checkFreighter();
+
+      if (!isAvailable) {
+        console.log('Freighter no detectado');
         setShowFreighterModal(true)
         setLoading(false)
         return
