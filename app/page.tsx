@@ -104,7 +104,7 @@ export default async function LandingPage() {
           <iframe 
             width="100%" 
             height="100%" 
-            src="https://www.youtube-nocookie.com/embed/8BoiZjOxOJo?rel=0&modestbranding=1" 
+            src="https://www.youtube-nocookie.com/embed/6Efm_GYjkW8?rel=0&modestbranding=1" 
             title="Crypto College - Aprende Web3" 
             frameBorder="0" 
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
