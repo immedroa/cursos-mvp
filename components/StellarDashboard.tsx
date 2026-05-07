@@ -5,6 +5,7 @@ import {
   isConnected, 
   requestAccess, 
   getNetworkDetails,
+  signMessage
 } from '@stellar/freighter-api'
 import Image from 'next/image'
 
@@ -67,12 +68,13 @@ const EVENTS: EventReward[] = [
 interface StellarDashboardProps {
   initialPoints: number
   initialStellarAddress: string | null
+  userEmail: string
   featured?: React.ReactNode
   library?: React.ReactNode
   secondary?: React.ReactNode
 }
 
-export default function StellarDashboard({ initialPoints, initialStellarAddress, featured, library, secondary }: StellarDashboardProps) {
+export default function StellarDashboard({ initialPoints, initialStellarAddress, userEmail, featured, library, secondary }: StellarDashboardProps) {
   const [points, setPoints] = useState(initialPoints)
   const [stellarAddress, setStellarAddress] = useState(initialStellarAddress)
   const [stellarNetwork, setStellarNetwork] = useState<string | null>(null)
@@ -86,6 +88,8 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
   const [historyLoading, setHistoryLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'AULA' | 'HISTORIAL'>('AULA')
   const [showConfirmation, setShowConfirmation] = useState(false)
+  const [showUnlinkModal, setShowUnlinkModal] = useState(false)
+  const [unlinkLoading, setUnlinkLoading] = useState(false)
 
   const fetchHistory = async () => {
     try {
@@ -123,18 +127,62 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
       const networkDetails = await getNetworkDetails()
       if (networkDetails && networkDetails.network) setStellarNetwork(networkDetails.network)
 
+      // 1. Obtener Challenge (Nonce)
+      const challengeRes = await fetch('/api/auth/wallet/challenge')
+      const { nonce } = await challengeRes.json()
+
+      // 2. Firmar Desafío
+      const messageToSign = `Sign this message to link your wallet to Crypto College: ${nonce}`
+      const signature = await signMessage(messageToSign)
+      
+      if (!signature) throw new Error('Firma cancelada por el usuario')
+
+      // 3. Vincular con Verificación
       const response = await fetch('/api/stellar/address', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address: publicKey }),
+        body: JSON.stringify({ address: publicKey, signature }),
       })
-      if (!response.ok) throw new Error('Error al guardar la dirección')
+      
+      const data = await response.json()
+      
+      if (!response.ok) {
+        if (response.status === 409) {
+          alert(data.error + (data.help ? `\n\n${data.help}` : ''))
+        } else {
+          throw new Error(data.error || 'Error al guardar la dirección')
+        }
+        return
+      }
+      
       setStellarAddress(publicKey)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al conectar wallet:', error)
-      alert('Hubo un problema al conectar con Freighter.')
+      alert(error.message || 'Hubo un problema al conectar con Freighter.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleUnlinkWallet = () => {
+    setShowUnlinkModal(true)
+  }
+
+  const confirmUnlinkWallet = async () => {
+    setUnlinkLoading(true)
+    try {
+      const response = await fetch('/api/stellar/unlink', {
+        method: 'POST'
+      })
+      if (!response.ok) throw new Error('Error al desvincular')
+      setStellarAddress(null)
+      setStellarNetwork(null)
+      setShowUnlinkModal(false)
+    } catch (error) {
+      console.error('Error al desvincular wallet:', error)
+      alert('Error al desvincular la wallet.')
+    } finally {
+      setUnlinkLoading(false)
     }
   }
 
@@ -276,38 +324,77 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
         <div className="space-y-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
           
           {/* 1. ZONA RESUMEN: Header compacto de status */}
-          <section className="flex flex-col md:flex-row items-center justify-between gap-6 p-6 rounded-[32px] border border-white/10 bg-white/[0.02]">
-            <div className="flex items-center gap-6">
-              <div className="w-12 h-12 rounded-2xl bg-yellow-400/10 flex items-center justify-center text-yellow-400">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-              </div>
-              <div>
-                <h3 className="text-sm font-black uppercase tracking-tight text-white/70">Hola de nuevo</h3>
-                <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-0.5">Estudiante Premium</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-12">
-              <div className="text-center">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500 mb-1">Puntos</p>
-                <div className="flex items-center gap-2">
-                   <span className="text-2xl font-black text-yellow-400 leading-none">{points}</span>
-                   <span className="text-[10px] font-bold text-neutral-600 uppercase">PTS</span>
+          <section className="relative overflow-hidden p-8 rounded-[40px] border border-white/10 bg-white/[0.02] backdrop-blur-md shadow-2xl">
+            {/* Elementos decorativos de fondo */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-400/5 blur-[100px] -mr-32 -mt-32 rounded-full"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/5 blur-[80px] -ml-24 -mb-24 rounded-full"></div>
+            
+            <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+              {/* Perfil */}
+              <div className="flex items-center gap-5">
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-black shadow-lg shadow-yellow-400/20">
+                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 border-4 border-[#0A0A0A] rounded-full"></div>
+                </div>
+                <div>
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-neutral-500 mb-1">Estudiante</h3>
+                  <p className="text-lg font-black text-white leading-none truncate max-w-[150px]">{userEmail.split('@')[0]}</p>
+                  <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-1.5 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    Online
+                  </p>
                 </div>
               </div>
 
-              <div className="text-right">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500 mb-1">Red Stellar</p>
+              {/* Puntos */}
+              <div className="flex flex-col items-center md:border-x border-white/5 px-8">
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 mb-3">Balance de Aprendizaje</p>
+                <div className="flex items-end gap-3">
+                   <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-neutral-500 leading-none tabular-nums">{points}</span>
+                   <div className="flex flex-col mb-1">
+                     <span className="text-[10px] font-black text-yellow-400 uppercase tracking-widest leading-none">Puntos</span>
+                     <span className="text-[8px] font-bold text-neutral-600 uppercase tracking-widest mt-1">Acumulados</span>
+                   </div>
+                </div>
+              </div>
+
+              {/* Wallet Status */}
+              <div className="flex flex-col items-end">
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 mb-3">Identidad On-Chain</p>
                 {stellarAddress ? (
-                  <div className="flex flex-col items-end">
-                    <span className="text-xs font-mono text-white leading-none">{truncateAddress(stellarAddress)}</span>
-                    <span className="text-[8px] font-black uppercase tracking-[0.2em] text-blue-400 mt-1">{stellarNetwork || 'CONECTADO'}</span>
+                  <div className="flex flex-col items-end w-full">
+                    <div className="relative px-5 py-4 rounded-3xl bg-white/[0.03] border border-white/10 hover:border-blue-400/30 transition-all w-full">
+                      <div className="flex items-center justify-between gap-4 mb-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.5)]"></div>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">{stellarNetwork || 'STELLAR'}</span>
+                        </div>
+                        <span className="text-xs font-mono text-white/80">{truncateAddress(stellarAddress)}</span>
+                      </div>
+                      
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleUnlinkWallet(); }}
+                        className="w-full py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[9px] font-black uppercase tracking-widest transition-all border border-red-500/20"
+                      >
+                        Desvincular Wallet
+                      </button>
+                    </div>
                   </div>
                 ) : (
-                  <button onClick={handleConnectWallet} disabled={loading} className="text-[10px] font-black uppercase tracking-widest text-yellow-400 hover:text-white transition-colors underline underline-offset-4">
-                    {loading ? '...' : 'Conectar Wallet'}
+                  <button 
+                    onClick={handleConnectWallet} 
+                    disabled={loading} 
+                    className="relative group overflow-hidden px-8 py-3 rounded-2xl bg-white text-black font-black text-[10px] uppercase tracking-[0.2em] transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                  >
+                    <span className="relative z-10">{loading ? 'CONECTANDO...' : 'VINCULAR WALLET'}</span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                   </button>
                 )}
+                <p className="text-[9px] text-neutral-600 mt-3 text-right">
+                  {stellarAddress ? 'Tu wallet es tu identidad educativa.' : 'Conecta Freighter para puntos on-chain.'}
+                </p>
               </div>
             </div>
           </section>
@@ -648,6 +735,43 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
                 Cerrar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Modal de Desvinculación */}
+      {showUnlinkModal && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => !unlinkLoading && setShowUnlinkModal(false)}></div>
+          <div className="relative w-full max-w-sm bg-[#0A0A0A] border border-white/10 rounded-[32px] p-8 md:p-10 text-center shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+            </div>
+            
+            <h3 className="text-xl font-black uppercase tracking-tight mb-3">¿Desvincular wallet?</h3>
+            <p className="text-neutral-400 text-sm leading-relaxed mb-8">
+              Tu wallet dejará de estar asociada a esta cuenta de Crypto College. Esto no mueve fondos ni revoca permisos on-chain.
+            </p>
+
+            <div className="space-y-3">
+              <button 
+                onClick={confirmUnlinkWallet}
+                disabled={unlinkLoading}
+                className="w-full bg-red-500 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-red-600 transition-colors disabled:opacity-50"
+              >
+                {unlinkLoading ? 'Desvinculando...' : 'Sí, desvincular'}
+              </button>
+              <button 
+                onClick={() => setShowUnlinkModal(false)}
+                disabled={unlinkLoading}
+                className="w-full py-4 text-[10px] font-black text-neutral-500 hover:text-white uppercase tracking-[0.2em] transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+            
+            <p className="mt-6 text-[9px] text-neutral-600 uppercase tracking-widest">
+              Revocar permisos se hace desde tu wallet.
+            </p>
           </div>
         </div>
       )}

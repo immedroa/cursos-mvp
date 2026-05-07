@@ -152,6 +152,7 @@ export default async function PlataformaPage() {
         <StellarDashboard 
           initialPoints={profile.points || 0} 
           initialStellarAddress={profile.stellar_address} 
+          userEmail={profile.email}
           featured={
             featuredCourse ? (
               <section className="relative overflow-hidden rounded-[40px] border border-white/10 bg-gradient-to-br from-white/[0.08] to-transparent p-10 group">
