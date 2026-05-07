@@ -49,9 +49,8 @@ export default async function CoursePage({
     redirect('/acceso')
   }
 
-  if (!profile.has_access) {
-    redirect('/plataforma')
-  }
+  // Acceso simplificado: si está autenticado, tiene acceso.
+
 
   const { data: course, error } = await supabase
     .from('courses')
