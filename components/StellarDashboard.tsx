@@ -17,6 +17,15 @@ interface Mentor {
   imageUrl: string
 }
 
+interface EventReward {
+  id: string
+  name: string
+  description: string
+  bookingUrl: string
+  imageUrl: string
+  discountCode: string
+}
+
 const MENTORS: Mentor[] = [
   {
     id: 'marcelo',
@@ -44,6 +53,17 @@ const MENTORS: Mentor[] = [
   }
 ]
 
+const EVENTS: EventReward[] = [
+  {
+    id: 'bsl-peru-2026',
+    name: 'BSL On Tour Perú 2026',
+    description: 'Acceso gratuito al Blockchain Summit Latam en Lima. Networking y educación Web3 de alto nivel.',
+    bookingUrl: 'https://welcu.com/blockchain-summit-latam/bsl-on-tour-peru-2026',
+    imageUrl: '/events/bsl.png',
+    discountCode: 'HORIZONBLOCK'
+  }
+]
+
 interface StellarDashboardProps {
   initialPoints: number
   initialStellarAddress: string | null
@@ -56,7 +76,9 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
   const [stellarNetwork, setStellarNetwork] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [isMentorModalOpen, setIsMentorModalOpen] = useState(false)
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false)
   const [redeemingId, setRedeemingId] = useState<string | null>(null)
+  const [redemptionType, setRedemptionType] = useState<'MENTOR' | 'EVENT' | null>(null)
   const [lastRewardTx, setLastRewardTx] = useState<{ hash: string, url: string } | null>(null)
   const [history, setHistory] = useState<any[]>([])
   const [historyLoading, setHistoryLoading] = useState(true)
@@ -118,8 +140,13 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
     setIsMentorModalOpen(true)
   }
 
+  const handleOpenEvents = () => {
+    setIsEventModalOpen(true)
+  }
+
   const handleSelectMentor = async (mentor: Mentor) => {
     setRedeemingId(mentor.id)
+    setRedemptionType('MENTOR')
     try {
       const response = await fetch('/api/mentorship/redeem', {
         method: 'POST',
@@ -164,6 +191,49 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
       setIsMentorModalOpen(false)
     } catch (error) {
       console.error('Error al canjear mentoría:', error)
+      alert('Hubo un problema al procesar tu canje. Por favor intenta de nuevo.')
+    } finally {
+      setRedeemingId(null)
+    }
+  }
+
+  const handleSelectEvent = async (event: EventReward) => {
+    setRedeemingId(event.id)
+    setRedemptionType('EVENT')
+    try {
+      const response = await fetch('/api/event/redeem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventId: event.id, pointsSpent: 100 }),
+      })
+
+      if (!response.ok) throw new Error('Error al procesar el canje')
+      const { redemptionId } = await response.json()
+
+      // Disparar recompensa en XLM
+      try {
+        const rewardResponse = await fetch('/api/stellar/reward', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mentorRedemptionId: redemptionId }),
+        })
+
+        if (rewardResponse.ok) {
+          const rewardData = await rewardResponse.json()
+          if (rewardData.success) {
+            setLastRewardTx({ hash: rewardData.txHash, url: rewardData.explorerUrl })
+            fetchHistory()
+          }
+        }
+      } catch (e) {
+        console.error('Error al enviar recompensa XLM:', e)
+      }
+
+      setPoints(prev => prev - 100)
+      setShowConfirmation(true)
+      setIsEventModalOpen(false)
+    } catch (error) {
+      console.error('Error al canjear evento:', error)
       alert('Hubo un problema al procesar tu canje. Por favor intenta de nuevo.')
     } finally {
       setRedeemingId(null)
@@ -259,16 +329,39 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
             </div>
 
             {/* C) Bloque "Mentoría 1:1" */}
+            <div className="p-8 rounded-[32px] border border-white/10 bg-white/[0.02] relative overflow-hidden group hover:border-yellow-400/30 transition-all">
+              <div className="flex justify-between items-start mb-2">
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500">Sesión 1:1</p>
+              </div>
+              <h3 className="text-xl font-black mb-4 uppercase tracking-tight">Mentoría 1:1</h3>
+              <p className="text-xs text-neutral-400 mb-6 leading-relaxed">
+                Despeja tus dudas con expertos en sesiones privadas.
+              </p>
+
+              <div className="flex items-center justify-between mb-4 border-t border-white/5 pt-4">
+                <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Costo: 100 pts · Tienes: {points} pts</span>
+              </div>
+              
+              <button 
+                onClick={handleOpenMentors}
+                disabled={points < 100 || (stellarNetwork?.toUpperCase() !== 'TESTNET' && !!stellarAddress)}
+                className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${points >= 100 && (stellarNetwork?.toUpperCase() === 'TESTNET' || !stellarAddress) ? 'bg-white text-black hover:bg-yellow-400 hover:scale-[1.02]' : 'bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed'}`}
+              >
+                {points >= 100 ? 'Canjear mentoría' : 'Faltan puntos'}
+              </button>
+            </div>
+
+            {/* D) Bloque "Entradas a eventos" */}
             <div className="p-8 rounded-[32px] border border-yellow-400/20 bg-yellow-400/5 relative overflow-hidden group hover:border-yellow-400/40 transition-all">
               <div className="flex justify-between items-start mb-2">
                 <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-400">Exclusivo</p>
                 <span className="bg-yellow-400/20 text-yellow-400 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border border-yellow-400/20">
-                  MVP • Más beneficios próximamente
+                  MVP • Más beneficios pronto
                 </span>
               </div>
-              <h3 className="text-xl font-black mb-4 uppercase tracking-tight">Mentoría 1:1</h3>
+              <h3 className="text-xl font-black mb-4 uppercase tracking-tight">Entradas a eventos</h3>
               <p className="text-xs text-neutral-400 mb-6 leading-relaxed">
-                Despeja tus dudas con expertos en sesiones privadas. Pronto podrás canjear por swag, eventos y más.
+                Canjea tus puntos por tickets a los eventos Web3 más importantes.
               </p>
 
               <div className="flex items-center justify-between mb-4 border-t border-white/5 pt-4">
@@ -276,19 +369,15 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
               </div>
               
               <p className="text-[10px] text-yellow-400/60 mb-4 font-bold uppercase tracking-widest">
-                Primer beneficio disponible. Pronto: eventos, merch y más.
+                Blockchain Summit Latam On Tour Perú 2026 disponible ahora.
               </p>
 
-              {points < 100 && (
-                <p className="text-[11px] text-neutral-400 mb-4 leading-relaxed italic">Te faltan {100 - points} puntos para tu primera mentoría.</p>
-              )}
-              
               <button 
-                onClick={handleOpenMentors}
+                onClick={handleOpenEvents}
                 disabled={points < 100 || (stellarNetwork?.toUpperCase() !== 'TESTNET' && !!stellarAddress)}
                 className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${points >= 100 && (stellarNetwork?.toUpperCase() === 'TESTNET' || !stellarAddress) ? 'bg-yellow-400 text-black hover:scale-[1.02]' : 'bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed'}`}
               >
-                {points >= 100 ? 'Canjear mentoría' : 'Faltan puntos'}
+                {points >= 100 ? 'Canjear entrada' : 'Faltan puntos'}
               </button>
             </div>
           </section>
@@ -325,7 +414,12 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                       </div>
                       <div>
-                        <h4 className="font-black text-white uppercase tracking-tight">Mentoría con {mentor?.name || item.mentor_id}</h4>
+                        <h4 className="font-black text-white uppercase tracking-tight">
+                          {item.mentor_id.startsWith('event:') 
+                            ? `Entrada: ${EVENTS.find(e => e.id === item.mentor_id.replace('event:', ''))?.name || item.mentor_id.replace('event:', '')}`
+                            : `Mentoría con ${MENTORS.find(m => m.id === item.mentor_id)?.name || item.mentor_id}`
+                          }
+                        </h4>
                         <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">{date} • {item.points_spent} PTS Canjeados</p>
                       </div>
                     </div>
@@ -427,6 +521,72 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
           </div>
         </div>
       )}
+      {/* Modal de Eventos */}
+      {isEventModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsEventModalOpen(false)}></div>
+          <div className="relative w-full max-w-2xl bg-[#0A0A0A] border border-white/10 rounded-[40px] p-8 md:p-12 overflow-hidden max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex justify-between items-start mb-8">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-400 mb-2">Selección</p>
+                <h2 className="text-3xl font-black tracking-tighter uppercase leading-none">Eventos Disponibles</h2>
+              </div>
+              <button onClick={() => setIsEventModalOpen(false)} className="text-neutral-500 hover:text-white transition-colors">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+              </button>
+            </div>
+
+            <div className="grid gap-4">
+              {EVENTS.map(event => (
+                <div key={event.id} className="p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:border-yellow-400/30 transition-all group">
+                  <div className="flex flex-col md:flex-row md:items-center gap-6">
+                    <div className="relative w-20 h-20 shrink-0">
+                      <div className="w-full h-full bg-yellow-400/10 rounded-2xl flex items-center justify-center text-yellow-400">
+                         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4v-3a2 2 0 00-2-2H5z"></path></svg>
+                      </div>
+                      <div className="absolute inset-0 rounded-2xl border border-white/10 group-hover:border-yellow-400/30 transition-colors"></div>
+                    </div>
+                    
+                    <div className="flex-grow">
+                      <h4 className="text-lg font-black tracking-tight mb-1">{event.name}</h4>
+                      <p className="text-[10px] font-bold text-yellow-400 uppercase tracking-widest mb-3">Entrada gratuita</p>
+                      <p className="text-sm text-neutral-400 leading-relaxed">{event.description}</p>
+                    </div>
+                    
+                    <button 
+                      onClick={() => handleSelectEvent(event)}
+                      disabled={!!redeemingId}
+                      className="flex-shrink-0 bg-white text-black px-6 py-3 rounded-2xl font-black text-xs hover:bg-yellow-400 transition-all uppercase tracking-widest disabled:opacity-50"
+                    >
+                      {redeemingId === event.id ? 'Procesando...' : 'Canjear entrada'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {lastRewardTx && (
+              <div className="mt-8 p-4 rounded-2xl border border-emerald-400/20 bg-emerald-400/5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                  <p className="text-[11px] font-bold text-emerald-400 uppercase tracking-widest">Recompensa enviada: 1 XLM</p>
+                </div>
+                <a 
+                  href={lastRewardTx.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-[10px] font-black text-white hover:text-emerald-400 underline uppercase tracking-widest transition-colors"
+                >
+                  Ver TX: {lastRewardTx.hash.slice(0, 8)}...
+                </a>
+              </div>
+            )}
+
+            <p className="mt-8 text-center text-[10px] text-neutral-600 uppercase tracking-[0.2em]">Costo del canje: 100 puntos</p>
+          </div>
+        </div>
+      )}
+
       {/* Modal de Confirmación de Éxito */}
       {showConfirmation && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
@@ -436,30 +596,47 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
               <svg className="w-10 h-10 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
             </div>
             
-            <h2 className="text-3xl font-black tracking-tighter uppercase mb-4">Mentoría 1:1 canjeada con éxito</h2>
-            <p className="text-neutral-400 text-sm leading-relaxed mb-10">
-              Ya registramos tu canje en la red Stellar Testnet y lo verás reflejado en tu Historial Stellar. El siguiente paso es agendar el día y hora de tu sesión privada.
+            <h2 className="text-3xl font-black tracking-tighter uppercase mb-4">
+              {redemptionType === 'MENTOR' ? 'Mentoría 1:1' : 'Entrada a evento'} canjeada con éxito
+            </h2>
+            
+            <p className="text-neutral-400 text-sm leading-relaxed mb-6">
+              Ya registramos tu canje en la red Stellar Testnet y lo verás reflejado en tu Historial Stellar.
             </p>
+
+            {redemptionType === 'EVENT' ? (
+              <div className="bg-white/5 p-6 rounded-3xl border border-white/10 mb-8">
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 mb-2">Código de descuento</p>
+                <p className="text-2xl font-black text-yellow-400 tracking-widest mb-2">HORIZONBLOCK</p>
+                <p className="text-[11px] text-neutral-400">Usa este código y adquiere tu entrada de 99 USD gratis.</p>
+              </div>
+            ) : (
+              <p className="text-neutral-400 text-sm leading-relaxed mb-10">
+                El siguiente paso es agendar el día y hora de tu sesión privada.
+              </p>
+            )}
 
             <div className="space-y-4">
               <button 
                 onClick={() => {
-                  window.open("https://calendar.app.google/iB2gxQXXSwapTaPD8", "_blank", "noopener,noreferrer")
+                  const url = redemptionType === 'EVENT' 
+                    ? "https://welcu.com/blockchain-summit-latam/bsl-on-tour-peru-2026"
+                    : "https://calendar.app.google/iB2gxQXXSwapTaPD8"
+                  window.open(url, "_blank", "noopener,noreferrer")
                 }}
                 className="block w-full bg-yellow-400 text-black py-4 rounded-2xl font-black text-sm hover:scale-[1.02] transition-transform shadow-xl shadow-yellow-400/10 uppercase tracking-widest"
               >
-                Agendar mi mentoría
+                {redemptionType === 'EVENT' ? 'Adquirir mi entrada' : 'Agendar mi mentoría'}
               </button>
               <button 
                 onClick={() => {
                   setShowConfirmation(false)
                   setActiveTab('HISTORIAL')
-                  // Scroll suave al inicio del historial
                   window.scrollTo({ top: 0, behavior: 'smooth' })
                 }}
                 className="block w-full py-4 text-[10px] font-black text-neutral-500 hover:text-white uppercase tracking-[0.2em] transition-colors"
               >
-                Agendar más tarde
+                Cerrar
               </button>
             </div>
           </div>
