@@ -1,110 +1,94 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import { Keypair } from '@stellar/stellar-sdk'
-import { cookies } from 'next/headers'
 
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
-    const cookieStore = await cookies()
-    const nonce = cookieStore.get('auth_nonce')?.value
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    // 1. Obtener usuario autenticado
+    const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
     }
 
-    const { address, signature } = await request.json()
+    // 2. Leer datos del body
+    const { address, network } = await request.json()
 
-    if (!address || typeof address !== 'string' || !signature) {
-      return NextResponse.json({ error: 'Datos incompletos' }, { status: 400 })
+    if (!address || typeof address !== 'string') {
+      return NextResponse.json({ error: 'Dirección de wallet requerida' }, { status: 400 })
     }
 
-    if (!nonce) {
-      return NextResponse.json({ error: 'Sesión de vinculación expirada. Por favor intenta de nuevo.' }, { status: 400 })
-    }
+    // 3. Lógica de Reactivación / Vinculación
+    
+    // Paso A: ¿Este usuario ya tuvo esta misma wallet vinculada antes?
+    const { data: pastRecord } = await supabase
+      .from('user_wallets')
+      .select('id, unlinked_at')
+      .eq('user_id', user.id)
+      .eq('wallet_address', address)
+      .single()
 
-    // 1. Verificar Firma (Seguridad)
-    try {
-      console.log('[LINK_WALLET] Iniciando verificación:', { address, nonce, signatureLength: signature?.length });
+    if (pastRecord) {
+      // Si ya está activa, no hacemos nada (idempotente)
+      if (pastRecord.unlinked_at === null) {
+        return NextResponse.json({ success: true, message: 'Wallet ya vinculada y activa.' })
+      }
       
-      const keypair = Keypair.fromPublicKey(address)
-      const message = `Sign this message to link your wallet to Crypto College: ${nonce}`
-      
-      console.log('[LINK_WALLET] Mensaje esperado:', message);
-      
-      // Intentar decodificar firma
-      let signatureBuffer;
-      try {
-        signatureBuffer = Buffer.from(signature, 'base64');
-        console.log('[LINK_WALLET] Firma decodificada (base64 OK), bytes:', signatureBuffer.length);
-      } catch (e) {
-        console.error('[LINK_WALLET] Error decodificando firma base64:', e);
-        return NextResponse.json({ error: 'Formato de firma inválido (no es base64).' }, { status: 400 });
+      // Si existe pero está desvinculada (soft delete), la REACTIVAMOS
+      const { error: reactivateError } = await supabase
+        .from('user_wallets')
+        .update({ unlinked_at: null, network: network || 'stellar-testnet' })
+        .eq('id', pastRecord.id)
+
+      if (reactivateError) {
+        console.error('Error reactivando wallet:', reactivateError)
+        return NextResponse.json({ error: 'Error al reactivar la vinculación' }, { status: 500 })
       }
 
-      const isValid = keypair.verify(Buffer.from(message), signatureBuffer)
-      console.log('[LINK_WALLET] ¿Firma válida?:', isValid);
-      
-      if (!isValid) {
-        return NextResponse.json({ 
-          error: 'La firma de la wallet no es válida.',
-          debug: { expectedMessage: message, receivedAddress: address }
-        }, { status: 401 })
-      }
-    } catch (e: any) {
-      console.error('[LINK_WALLET] Excepción en verificación de firma:', e);
-      return NextResponse.json({ 
-        error: 'Error al verificar la propiedad de la wallet.',
-        details: e.message 
-      }, { status: 400 })
+      // Sincronizar profile
+      await supabase.from('profiles').update({ stellar_address: address }).eq('id', user.id)
+
+      return NextResponse.json({ success: true, message: 'Wallet reactivada correctamente' })
     }
 
-    // 2. Verificar Unicidad Activa (Regla de negocio)
-    // Buscamos si la wallet ya está vinculada a otra cuenta y NO ha sido desvinculada.
-    const { data: existingWallet } = await supabase
+    // Paso B: Si es una vinculación "nueva" para este usuario, verificar Unicidad Global Activa
+    // (Asegurarnos que otro usuario no la tenga vinculada actualmente)
+    const { data: otherUserWallet } = await supabase
       .from('user_wallets')
       .select('user_id')
       .eq('wallet_address', address)
       .is('unlinked_at', null)
       .single()
 
-    if (existingWallet) {
-      if (existingWallet.user_id === user.id) {
-        return NextResponse.json({ success: true, message: 'Wallet ya vinculada.' })
-      }
+    if (otherUserWallet) {
       return NextResponse.json({ 
         error: 'Esta wallet ya está asociada a otra cuenta.',
-        help: 'Si deseas usar esta wallet aquí, primero desvincúlala desde la cuenta donde fue registrada.'
+        help: 'Si deseas usar esta wallet aquí, primero desvincúlala de la otra cuenta.'
       }, { status: 409 })
     }
 
-    // 3. Vincular Wallet
-    const { error: linkError } = await supabase
+    // Paso C: Insertar nueva vinculación
+    const { error: insertError } = await supabase
       .from('user_wallets')
       .insert({ 
         user_id: user.id, 
         wallet_address: address,
-        network: 'stellar'
+        network: network || 'stellar-testnet'
       })
 
-    if (linkError) {
-      console.error('Error insertando en user_wallets:', linkError)
-      return NextResponse.json({ error: 'Error al guardar la vinculación en la base de datos.' }, { status: 500 })
+    if (insertError) {
+      console.error('Error insertando nueva vinculación:', insertError)
+      return NextResponse.json({ error: 'Error al guardar la vinculación' }, { status: 500 })
     }
 
-    // Actualizar profile para retrocompatibilidad
-    await supabase
-      .from('profiles')
-      .update({ stellar_address: address })
-      .eq('id', user.id)
+    // Sincronizar profile
+    await supabase.from('profiles').update({ stellar_address: address }).eq('id', user.id)
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, message: 'Wallet vinculada correctamente' })
+
   } catch (error) {
-    console.error('Error en API route:', error)
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    console.error('Error en API vinculación:', error)
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
   }
 }

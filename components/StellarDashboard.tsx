@@ -92,6 +92,10 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
   const [showFreighterModal, setShowFreighterModal] = useState(false)
   const [unlinkLoading, setUnlinkLoading] = useState(false)
 
+  // --- NUEVOS ESTADOS DE DETECCIÓN ---
+  const [hasFreighter, setHasFreighter] = useState<boolean>(false)
+  const [isCheckingFreighter, setIsCheckingFreighter] = useState<boolean>(true)
+
   const fetchHistory = async () => {
     try {
       const response = await fetch('/api/stellar/history')
@@ -107,6 +111,30 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
   useEffect(() => {
     fetchHistory()
     setStellarAddress(initialStellarAddress)
+
+    // --- LÓGICA DE DETECCIÓN DE FREIGHTER ---
+    const checkFreighter = async () => {
+      try {
+        // Intentar detección usando isConnected de la librería oficial
+        const connected = await isConnected()
+        if (connected) {
+          setHasFreighter(true)
+        } else {
+          // Segundo intento: Verificar objeto global
+          const win = window as any
+          const exists = !!(win.freighterApi || (win.starlight && win.starlight.freighter))
+          setHasFreighter(exists)
+        }
+      } catch (e) {
+        console.warn('Error detectando Freighter:', e)
+        setHasFreighter(false)
+      } finally {
+        setIsCheckingFreighter(false)
+      }
+    }
+
+    checkFreighter()
+
     if (initialStellarAddress) {
       getNetworkDetails().then(details => {
         if (details && details.network) setStellarNetwork(details.network)
@@ -115,81 +143,37 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
   }, [initialStellarAddress])
 
   const handleConnectWallet = async () => {
+    // GUARD CLAUSE: Si no hay freighter, no hacemos nada
+    if (!hasFreighter && !isCheckingFreighter) return
+
     setLoading(true)
     try {
-      // 1. Detección robusta de Freighter con timeout
-      const checkFreighter = async () => {
-        // Intento 1: Detección directa del objeto inyectado
-        if (typeof window !== 'undefined' && (window as any).freighterApi) {
-          return true;
-        }
-        
-        // Intento 2: Usar la función de la librería con timeout de 1.5s
-        const timeoutPromise = new Promise<boolean>((resolve) => 
-          setTimeout(() => resolve(false), 1500)
-        );
-        
-        try {
-          return await Promise.race([isConnected(), timeoutPromise]);
-        } catch (e) {
-          return false;
-        }
-      };
-
-      const isAvailable = await checkFreighter();
-
-      if (!isAvailable) {
-        console.log('Freighter no detectado');
+      // 1. Detectar si Freighter está disponible
+      if (!await isConnected()) {
         setShowFreighterModal(true)
         setLoading(false)
         return
       }
 
-      // 2. Solicitud de acceso
+      // 2. Obtener la dirección pública
       const { address: publicKey, error: freighterError } = await requestAccess()
       
-      if (freighterError) {
-        if (freighterError.includes('User declined')) {
-          alert('Conexión cancelada. Por favor, aprueba la solicitud en Freighter para continuar.')
-        } else {
-          throw new Error(freighterError)
-        }
-        return
-      }
-
-      if (!publicKey) throw new Error('No se pudo obtener la dirección de la wallet')
-
-      const networkDetails = await getNetworkDetails()
-      if (networkDetails && networkDetails.network) setStellarNetwork(networkDetails.network)
-
-      // 3. Obtener Challenge (Nonce)
-      const challengeRes = await fetch('/api/auth/wallet/challenge')
-      const { nonce } = await challengeRes.json()
-      console.log('[CONNECT_WALLET] Nonce obtenido:', nonce);
-
-      // 4. Firmar Desafío
-      const messageToSign = `Sign this message to link your wallet to Crypto College: ${nonce}`
-      
-      let signature;
-      try {
-        console.log('[CONNECT_WALLET] Solicitando firma para el mensaje:', messageToSign);
-        signature = await signMessage(messageToSign)
-        console.log('[CONNECT_WALLET] Firma recibida de Freighter (base64):', signature);
-      } catch (signErr: any) {
-        if (signErr?.message?.includes('User declined') || signErr?.message?.includes('cancel')) {
-          alert('Firma cancelada. Es necesario firmar el mensaje para verificar tu identidad.')
+      if (freighterError || !publicKey) {
+        if (freighterError?.includes('User declined')) {
+          // Usuario canceló, no mostramos error grave
           return
         }
-        throw signErr
+        throw new Error(freighterError || 'No se pudo obtener la dirección de la wallet')
       }
-      
-      if (!signature) throw new Error('No se recibió la firma de la transacción')
 
-      // 5. Vincular con Verificación
+      // 3. Vincular en Backend (Sin firma para esta versión mínima)
       const response = await fetch('/api/stellar/address', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address: publicKey, signature }),
+        body: JSON.stringify({ 
+          address: publicKey, 
+          network: 'stellar-testnet' 
+        }),
       })
       
       const data = await response.json()
@@ -197,11 +181,8 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
       if (!response.ok) {
         if (response.status === 409) {
           alert(data.error + (data.help ? `\n\n${data.help}` : ''))
-        } else if (data.debug || data.details) {
-          console.error('[CONNECT_WALLET] Error técnico:', data);
-          alert(`Error de verificación: ${data.error}\n\nDetalles técnicos: ${data.details || JSON.stringify(data.debug)}`);
         } else {
-          throw new Error(data.error || 'Error al guardar la dirección')
+          alert(data.error || 'Error al vincular la wallet')
         }
         return
       }
@@ -209,7 +190,7 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
       setStellarAddress(publicKey)
     } catch (error: any) {
       console.error('Error al conectar wallet:', error)
-      alert(error.message || 'Hubo un problema al conectar con Freighter. Asegúrate de que la extensión esté desbloqueada.')
+      alert('Hubo un problema al conectar con Freighter. Por favor reintenta.')
     } finally {
       setLoading(false)
     }
@@ -433,6 +414,34 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
                       </button>
                     </div>
                   </div>
+                ) : isCheckingFreighter ? (
+                  <div className="flex items-center gap-3 px-6 py-3 border border-white/5 bg-white/[0.02] rounded-2xl">
+                    <div className="w-3 h-3 border-2 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin"></div>
+                    <span className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Verificando wallet...</span>
+                  </div>
+                ) : !hasFreighter ? (
+                  <div className="w-full max-w-[280px]">
+                    <div className="p-4 rounded-3xl bg-orange-500/5 border border-orange-500/20 mb-3">
+                      <p className="text-[10px] font-bold text-orange-200/80 leading-relaxed mb-3">
+                        No detectamos Freighter. Instálala para activar tus beneficios on-chain.
+                      </p>
+                      <a 
+                        href="https://www.freighter.app/" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 text-[9px] font-black text-orange-400 hover:text-orange-300 uppercase tracking-widest transition-colors"
+                      >
+                        Instalar Freighter
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                      </a>
+                    </div>
+                    <button 
+                      disabled 
+                      className="w-full px-8 py-3 rounded-2xl bg-white/5 text-neutral-600 font-black text-[10px] uppercase tracking-[0.2em] cursor-not-allowed border border-white/5"
+                    >
+                      VINCULAR WALLET
+                    </button>
+                  </div>
                 ) : (
                   <button 
                     onClick={handleConnectWallet} 
@@ -444,7 +453,7 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
                   </button>
                 )}
                 <p className="text-[9px] text-neutral-600 mt-3 text-right">
-                  {stellarAddress ? 'Tu wallet es tu identidad educativa.' : 'Conecta Freighter para puntos on-chain.'}
+                  {stellarAddress ? 'Tu wallet es tu identidad educativa.' : (hasFreighter ? 'Conecta Freighter para puntos on-chain.' : 'Requerido para recompensas.')}
                 </p>
               </div>
             </div>
