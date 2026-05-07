@@ -155,8 +155,15 @@ export default async function PlataformaPage() {
           featured={
             featuredCourse ? (
               <section className="relative overflow-hidden rounded-[40px] border border-white/10 bg-gradient-to-br from-white/[0.08] to-transparent p-10 group">
-                <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
-                  <svg className="w-40 h-40" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm0 3.45l8.1 14.1H3.9L12 5.45z"/></svg>
+                {/* Fondo decorativo sutil */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                  <Image 
+                    src="/fondoflotante.png" 
+                    alt="Blockchain background" 
+                    fill 
+                    className="object-cover object-right opacity-[0.05] group-hover:opacity-[0.08] transition-opacity duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#080808] via-[#080808]/40 to-transparent"></div>
                 </div>
                 
                 <div className="relative z-10">
