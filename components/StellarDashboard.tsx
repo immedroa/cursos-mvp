@@ -89,6 +89,7 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
   const [activeTab, setActiveTab] = useState<'AULA' | 'HISTORIAL'>('AULA')
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [showUnlinkModal, setShowUnlinkModal] = useState(false)
+  const [showFreighterModal, setShowFreighterModal] = useState(false)
   const [unlinkLoading, setUnlinkLoading] = useState(false)
 
   const fetchHistory = async () => {
@@ -116,28 +117,51 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
   const handleConnectWallet = async () => {
     setLoading(true)
     try {
+      // 1. Detección de Freighter
       if (!await isConnected()) {
-        alert('Por favor instala la extensión Freighter para conectar tu wallet.')
+        setShowFreighterModal(true)
         setLoading(false)
         return
       }
+
+      // 2. Solicitud de acceso
       const { address: publicKey, error: freighterError } = await requestAccess()
-      if (freighterError || !publicKey) throw new Error(freighterError || 'No se pudo obtener la llave pública')
+      
+      if (freighterError) {
+        if (freighterError.includes('User declined')) {
+          alert('Conexión cancelada. Por favor, aprueba la solicitud en Freighter para continuar.')
+        } else {
+          throw new Error(freighterError)
+        }
+        return
+      }
+
+      if (!publicKey) throw new Error('No se pudo obtener la dirección de la wallet')
 
       const networkDetails = await getNetworkDetails()
       if (networkDetails && networkDetails.network) setStellarNetwork(networkDetails.network)
 
-      // 1. Obtener Challenge (Nonce)
+      // 3. Obtener Challenge (Nonce)
       const challengeRes = await fetch('/api/auth/wallet/challenge')
       const { nonce } = await challengeRes.json()
 
-      // 2. Firmar Desafío
+      // 4. Firmar Desafío
       const messageToSign = `Sign this message to link your wallet to Crypto College: ${nonce}`
-      const signature = await signMessage(messageToSign)
       
-      if (!signature) throw new Error('Firma cancelada por el usuario')
+      let signature;
+      try {
+        signature = await signMessage(messageToSign)
+      } catch (signErr: any) {
+        if (signErr?.message?.includes('User declined') || signErr?.message?.includes('cancel')) {
+          alert('Firma cancelada. Es necesario firmar el mensaje para verificar tu identidad.')
+          return
+        }
+        throw signErr
+      }
+      
+      if (!signature) throw new Error('No se recibió la firma de la transacción')
 
-      // 3. Vincular con Verificación
+      // 5. Vincular con Verificación
       const response = await fetch('/api/stellar/address', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -158,7 +182,7 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
       setStellarAddress(publicKey)
     } catch (error: any) {
       console.error('Error al conectar wallet:', error)
-      alert(error.message || 'Hubo un problema al conectar con Freighter.')
+      alert(error.message || 'Hubo un problema al conectar con Freighter. Asegúrate de que la extensión esté desbloqueada.')
     } finally {
       setLoading(false)
     }
@@ -772,6 +796,45 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
             <p className="mt-6 text-[9px] text-neutral-600 uppercase tracking-widest">
               Revocar permisos se hace desde tu wallet.
             </p>
+          </div>
+        </div>
+      )}
+      {/* Modal de Necesitas Freighter */}
+      {showFreighterModal && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowFreighterModal(false)}></div>
+          <div className="relative w-full max-w-sm bg-[#0A0A0A] border border-white/10 rounded-[32px] p-8 md:p-10 text-center shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="w-20 h-20 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-blue-500/20">
+               <Image 
+                src="/logo.png" 
+                alt="Freighter" 
+                width={40} 
+                height={40} 
+                className="grayscale"
+              />
+            </div>
+            
+            <h3 className="text-2xl font-black uppercase tracking-tight mb-3">Necesitas Freighter</h3>
+            <p className="text-neutral-400 text-sm leading-relaxed mb-8">
+              Para vincular tu wallet Stellar en Crypto College, primero instala la extensión Freighter y luego vuelve a intentarlo.
+            </p>
+
+            <div className="space-y-3">
+              <a 
+                href="https://www.freighter.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full bg-white text-black py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-yellow-400 transition-colors"
+              >
+                Instalar Freighter
+              </a>
+              <button 
+                onClick={() => setShowFreighterModal(false)}
+                className="w-full py-4 text-[10px] font-black text-neutral-500 hover:text-white uppercase tracking-[0.2em] transition-colors"
+              >
+                Entendido
+              </button>
+            </div>
           </div>
         </div>
       )}
