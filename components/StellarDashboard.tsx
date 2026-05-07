@@ -213,7 +213,7 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
                 <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest pb-1">PTS</span>
               </div>
               <p className="text-[11px] text-neutral-400 leading-relaxed">
-                Gana puntos participando en cursos, retos y eventos para impulsar tu progreso en el ecosistema Web3.
+                Gana puntos automáticamente por completar lecciones y canjéalos por entradas a eventos, mentorías 1:1 y más premios exclusivos.
               </p>
             </div>
 
@@ -260,15 +260,29 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
 
             {/* C) Bloque "Mentoría 1:1" */}
             <div className="p-8 rounded-[32px] border border-yellow-400/20 bg-yellow-400/5 relative overflow-hidden group hover:border-yellow-400/40 transition-all">
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-400 mb-2">Exclusivo</p>
+              <div className="flex justify-between items-start mb-2">
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-400">Exclusivo</p>
+                <span className="bg-yellow-400/20 text-yellow-400 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border border-yellow-400/20">
+                  MVP • Más beneficios próximamente
+                </span>
+              </div>
               <h3 className="text-xl font-black mb-4 uppercase tracking-tight">Mentoría 1:1</h3>
-              <p className="text-xs text-neutral-400 mb-6 leading-relaxed">Despeja tus dudas con expertos en sesiones privadas.</p>
+              <p className="text-xs text-neutral-400 mb-6 leading-relaxed">
+                Despeja tus dudas con expertos en sesiones privadas. Pronto podrás canjear por swag, eventos y más.
+              </p>
+
               <div className="flex items-center justify-between mb-4 border-t border-white/5 pt-4">
                 <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Costo: 100 pts · Tienes: {points} pts</span>
               </div>
+              
+              <p className="text-[10px] text-yellow-400/60 mb-4 font-bold uppercase tracking-widest">
+                Primer beneficio disponible. Pronto: eventos, merch y más.
+              </p>
+
               {points < 100 && (
-                <p className="text-[11px] text-neutral-400 mb-4 leading-relaxed">Aún no tienes los puntos necesarios.</p>
+                <p className="text-[11px] text-neutral-400 mb-4 leading-relaxed italic">Te faltan {100 - points} puntos para tu primera mentoría.</p>
               )}
+              
               <button 
                 onClick={handleOpenMentors}
                 disabled={points < 100 || (stellarNetwork?.toUpperCase() !== 'TESTNET' && !!stellarAddress)}
