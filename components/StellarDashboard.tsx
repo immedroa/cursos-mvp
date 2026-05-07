@@ -115,18 +115,20 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
     // --- LÓGICA DE DETECCIÓN DE FREIGHTER ---
     const checkFreighter = async () => {
       try {
-        // Intentar detección usando isConnected de la librería oficial
-        const connected = await isConnected()
-        if (connected) {
+        // 1. Intento síncrono instantáneo (Detección más segura de presencia)
+        const win = window as any
+        if (win.freighterApi) {
           setHasFreighter(true)
-        } else {
-          // Segundo intento: Verificar objeto global
-          const win = window as any
-          const exists = !!(win.freighterApi || (win.starlight && win.starlight.freighter))
-          setHasFreighter(exists)
+          setIsCheckingFreighter(false)
+          return
         }
+
+        // 2. Intento asíncrono con timeout de 1 segundo
+        const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 1000))
+        const connected = await Promise.race([isConnected(), timeout]) as boolean
+        setHasFreighter(connected)
       } catch (e) {
-        console.warn('Error detectando Freighter:', e)
+        // Si hay timeout o error, asumimos que no está disponible
         setHasFreighter(false)
       } finally {
         setIsCheckingFreighter(false)
@@ -143,13 +145,16 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
   }, [initialStellarAddress])
 
   const handleConnectWallet = async () => {
-    // GUARD CLAUSE: Si no hay freighter, no hacemos nada
+    // GUARD CLAUSE
     if (!hasFreighter && !isCheckingFreighter) return
 
     setLoading(true)
     try {
-      // 1. Detectar si Freighter está disponible
-      if (!await isConnected()) {
+      // 1. Detectar si Freighter está disponible con timeout para evitar cuelgues
+      const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('La wallet no responde')), 2000))
+      const isReady = await Promise.race([isConnected(), timeout]).catch(() => false)
+
+      if (!isReady) {
         setShowFreighterModal(true)
         setLoading(false)
         return
