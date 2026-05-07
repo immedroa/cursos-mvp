@@ -271,118 +271,138 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
       </nav>
 
       {activeTab === 'AULA' ? (
-        <>
-          <section className="grid gap-6 md:grid-cols-3 mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* A) Bloque "Mis puntos" */}
-            <div className="p-8 rounded-[32px] border border-white/10 bg-white/[0.02] relative overflow-hidden group hover:border-yellow-400/30 transition-all">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-400/5 blur-2xl"></div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 mb-2">Acumulados</p>
-              <h3 className="text-xl font-black mb-4 uppercase tracking-tight">Mis Puntos</h3>
-              <div className="flex items-end gap-2 mb-4">
-                <span className="text-4xl font-black text-yellow-400 leading-none">{points}</span>
-                <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest pb-1">PTS</span>
+        <div className="space-y-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          
+          {/* 1. ZONA RESUMEN: Compacta y de lectura rápida */}
+          <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* A) Mis Puntos */}
+            <div className="p-6 rounded-[24px] border border-white/10 bg-white/[0.02] flex items-center justify-between group hover:border-yellow-400/30 transition-all">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500 mb-1">Balance</p>
+                <h3 className="text-sm font-black uppercase tracking-tight text-white/70">Mis Puntos</h3>
               </div>
-              <p className="text-[11px] text-neutral-400 leading-relaxed">
-                Gana puntos automáticamente por completar lecciones y canjéalos por entradas a eventos, mentorías 1:1 y más premios exclusivos.
-              </p>
+              <div className="flex items-center gap-2">
+                <span className="text-3xl font-black text-yellow-400 leading-none">{points}</span>
+                <span className="text-[10px] font-bold text-neutral-500 uppercase">PTS</span>
+              </div>
             </div>
 
-            {/* B) Bloque "Mi wallet Stellar" */}
-            <div className="p-8 rounded-[32px] border border-white/10 bg-white/[0.02] relative overflow-hidden group hover:border-yellow-400/30 transition-all">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-blue-400/5 blur-2xl"></div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 mb-2">Red Stellar</p>
-              <h3 className="text-xl font-black mb-4 uppercase tracking-tight">Mi Wallet</h3>
-              {stellarAddress ? (
-                <div className="space-y-4">
-                  <div>
-                    <span className="block text-sm font-mono text-white mb-1">{truncateAddress(stellarAddress)}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Wallet conectada</span>
-                      {stellarNetwork && (
-                        <>
-                          <span className="text-white/20 text-[10px]">•</span>
-                          <span className={`text-[10px] font-bold uppercase tracking-widest ${stellarNetwork.toUpperCase() === 'TESTNET' ? 'text-blue-400' : 'text-orange-400'}`}>
-                            {stellarNetwork}
-                          </span>
-                        </>
-                      )}
-                    </div>
+            {/* B) Mi Wallet */}
+            <div className="p-6 rounded-[24px] border border-white/10 bg-white/[0.02] flex items-center justify-between group hover:border-blue-400/30 transition-all">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500 mb-1">Conexión</p>
+                <h3 className="text-sm font-black uppercase tracking-tight text-white/70">Mi Wallet</h3>
+              </div>
+              <div className="text-right">
+                {stellarAddress ? (
+                  <div className="flex flex-col items-end">
+                    <span className="text-xs font-mono text-white mb-0.5">{truncateAddress(stellarAddress)}</span>
+                    <span className={`text-[8px] font-black uppercase tracking-widest ${stellarNetwork?.toUpperCase() === 'TESTNET' ? 'text-blue-400' : 'text-orange-400'}`}>
+                      {stellarNetwork || 'Desconectado'}
+                    </span>
                   </div>
-                  {stellarNetwork && stellarNetwork.toUpperCase() !== 'TESTNET' ? (
-                    <p className="text-[11px] text-orange-400/80 leading-relaxed bg-orange-400/5 p-3 rounded-xl border border-orange-400/10">
-                      ⚠️ Cambia tu wallet a <strong>Testnet</strong> para probar las recompensas on-chain.
-                    </p>
-                  ) : (
-                    <p className="text-[11px] text-neutral-400 leading-relaxed">
-                      Wallet lista para recompensas demo en Stellar Testnet.
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <p className="text-xs text-neutral-400 leading-relaxed">Conecta tu wallet para habilitar recompensas on-chain.</p>
-                  <button onClick={handleConnectWallet} disabled={loading} className={`w-full py-3 rounded-2xl font-black text-xs transition-colors uppercase tracking-widest ${loading ? 'bg-neutral-800 text-neutral-500' : 'bg-white text-black hover:bg-yellow-400'}`}>
-                    {loading ? 'Conectando...' : 'Conectar mi wallet'}
+                ) : (
+                  <button onClick={handleConnectWallet} disabled={loading} className="text-[10px] font-black uppercase tracking-widest text-white hover:text-yellow-400 transition-colors">
+                    {loading ? '...' : 'Conectar'}
                   </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
-            {/* C) Bloque "Mentoría 1:1" */}
-            <div className="p-8 rounded-[32px] border border-white/10 bg-white/[0.02] relative overflow-hidden group hover:border-yellow-400/30 transition-all">
-              <div className="flex justify-between items-start mb-2">
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500">Sesión 1:1</p>
+            {/* C) Status / Membresía (Badge secundario) */}
+            <div className="p-6 rounded-[24px] border border-white/10 bg-white/[0.02] flex items-center justify-between group hover:border-emerald-400/30 transition-all">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500 mb-1">Membresía</p>
+                <h3 className="text-sm font-black uppercase tracking-tight text-white/70">Status</h3>
               </div>
-              <h3 className="text-xl font-black mb-4 uppercase tracking-tight">Mentoría 1:1</h3>
-              <p className="text-xs text-neutral-400 mb-6 leading-relaxed">
-                Despeja tus dudas con expertos en sesiones privadas.
-              </p>
-
-              <div className="flex items-center justify-between mb-4 border-t border-white/5 pt-4">
-                <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Costo: 100 pts · Tienes: {points} pts</span>
-              </div>
-              
-              <button 
-                onClick={handleOpenMentors}
-                disabled={points < 100 || (stellarNetwork?.toUpperCase() !== 'TESTNET' && !!stellarAddress)}
-                className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${points >= 100 && (stellarNetwork?.toUpperCase() === 'TESTNET' || !stellarAddress) ? 'bg-white text-black hover:bg-yellow-400 hover:scale-[1.02]' : 'bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed'}`}
-              >
-                {points >= 100 ? 'Canjear mentoría' : 'Faltan puntos'}
-              </button>
-            </div>
-
-            {/* D) Bloque "Entradas a eventos" */}
-            <div className="p-8 rounded-[32px] border border-yellow-400/20 bg-yellow-400/5 relative overflow-hidden group hover:border-yellow-400/40 transition-all">
-              <div className="flex justify-between items-start mb-2">
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-400">Exclusivo</p>
-                <span className="bg-yellow-400/20 text-yellow-400 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border border-yellow-400/20">
-                  MVP • Más beneficios pronto
-                </span>
-              </div>
-              <h3 className="text-xl font-black mb-4 uppercase tracking-tight">Entradas a eventos</h3>
-              <p className="text-xs text-neutral-400 mb-6 leading-relaxed">
-                Canjea tus puntos por tickets a los eventos Web3 más importantes.
-              </p>
-
-              <div className="flex items-center justify-between mb-4 border-t border-white/5 pt-4">
-                <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Costo: 100 pts · Tienes: {points} pts</span>
-              </div>
-              
-              <p className="text-[10px] text-yellow-400/60 mb-4 font-bold uppercase tracking-widest">
-                Blockchain Summit Latam On Tour Perú 2026 disponible ahora.
-              </p>
-
-              <button 
-                onClick={handleOpenEvents}
-                disabled={points < 100 || (stellarNetwork?.toUpperCase() !== 'TESTNET' && !!stellarAddress)}
-                className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${points >= 100 && (stellarNetwork?.toUpperCase() === 'TESTNET' || !stellarAddress) ? 'bg-yellow-400 text-black hover:scale-[1.02]' : 'bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed'}`}
-              >
-                {points >= 100 ? 'Canjear entrada' : 'Faltan puntos'}
-              </button>
+              <span className="bg-emerald-400/10 text-emerald-400 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-emerald-400/20">
+                Early Access
+              </span>
             </div>
           </section>
-          {children}
-        </>
+
+          {/* 2. CANJEA TUS PUNTOS: Marketplace unificado */}
+          <section>
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-2xl font-black tracking-tighter uppercase leading-none">Canjea tus puntos</h2>
+                <p className="text-neutral-500 text-xs mt-1">Beneficios exclusivos por tu progreso académico.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Reward: Mentoría */}
+              <div className="p-6 rounded-[32px] border border-white/10 bg-white/[0.01] hover:bg-white/[0.03] transition-all flex flex-col justify-between relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4">
+                  <span className="bg-yellow-400 text-black text-[9px] font-black px-2 py-1 rounded-lg uppercase tracking-widest shadow-lg shadow-yellow-400/10">
+                    100 PTS
+                  </span>
+                </div>
+                <div className="mb-8">
+                  <h4 className="text-lg font-black uppercase tracking-tight mb-2">Mentoría 1:1</h4>
+                  <p className="text-xs text-neutral-400 leading-relaxed max-w-[240px]">Sesión privada con expertos para potenciar tu carrera Web3.</p>
+                </div>
+                <button 
+                  onClick={handleOpenMentors}
+                  disabled={points < 100 || (stellarNetwork?.toUpperCase() !== 'TESTNET' && !!stellarAddress)}
+                  className={`w-full py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all ${points >= 100 && (stellarNetwork?.toUpperCase() === 'TESTNET' || !stellarAddress) ? 'bg-white text-black hover:bg-yellow-400' : 'bg-white/5 text-neutral-600 cursor-not-allowed border border-white/5'}`}
+                >
+                  {points >= 100 ? 'Seleccionar mentor' : 'Puntos insuficientes'}
+                </button>
+              </div>
+
+              {/* Reward: Eventos */}
+              <div className="p-6 rounded-[32px] border border-white/10 bg-white/[0.01] hover:bg-white/[0.03] transition-all flex flex-col justify-between relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4">
+                  <span className="bg-yellow-400 text-black text-[9px] font-black px-2 py-1 rounded-lg uppercase tracking-widest shadow-lg shadow-yellow-400/10">
+                    100 PTS
+                  </span>
+                </div>
+                <div className="mb-8">
+                  <h4 className="text-lg font-black uppercase tracking-tight mb-2">Entradas a Eventos</h4>
+                  <p className="text-xs text-neutral-400 leading-relaxed max-w-[240px]">Tickets gratis para los eventos cripto más importantes de Latam.</p>
+                </div>
+                <button 
+                  onClick={handleOpenEvents}
+                  disabled={points < 100 || (stellarNetwork?.toUpperCase() !== 'TESTNET' && !!stellarAddress)}
+                  className={`w-full py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all ${points >= 100 && (stellarNetwork?.toUpperCase() === 'TESTNET' || !stellarAddress) ? 'bg-white text-black hover:bg-yellow-400' : 'bg-white/5 text-neutral-600 cursor-not-allowed border border-white/5'}`}
+                >
+                  {points >= 100 ? 'Ver eventos' : 'Puntos insuficientes'}
+                </button>
+              </div>
+            </div>
+          </section>
+
+          {/* 3. SIGUE APRENDIENDO: Área de cursos */}
+          <section className="pt-8 border-t border-white/5">
+            <div className="mb-10">
+              <h2 className="text-2xl font-black tracking-tighter uppercase leading-none">Sigue aprendiendo</h2>
+              <p className="text-neutral-500 text-xs mt-1">Completa lecciones para acumular más puntos en Stellar.</p>
+            </div>
+            
+            <div className="bg-white/[0.01] rounded-[40px] border border-white/5 p-2 md:p-8">
+              {children}
+            </div>
+          </section>
+
+          {/* 4. ELEMENTOS SECUNDARIOS: Footer discreto */}
+          <footer className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-16 pb-8 border-t border-white/5">
+            <div className="p-8 rounded-[32px] border border-white/5 bg-white/[0.01] flex flex-col justify-center">
+               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-600 mb-4">¿Necesitas ayuda?</p>
+               <div className="flex gap-4">
+                 <a href="#" className="text-[11px] font-bold text-neutral-400 hover:text-white transition-colors">Soporte Técnico</a>
+                 <span className="text-white/10">•</span>
+                 <a href="#" className="text-[11px] font-bold text-neutral-400 hover:text-white transition-colors">Comunidad Discord</a>
+               </div>
+            </div>
+            <div className="p-8 rounded-[32px] border border-dashed border-white/10 flex flex-col justify-center">
+               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-600 mb-2">Próximamente en Crypto College</p>
+               <p className="text-[11px] text-neutral-500 leading-relaxed italic">
+                 Nuevos cursos de Soroban, Marketplace de Swag oficial y Certificados NFT con validez on-chain.
+               </p>
+            </div>
+          </footer>
+        </div>
       ) : (
         <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="mb-8">
