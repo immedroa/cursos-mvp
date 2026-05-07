@@ -29,16 +29,38 @@ export async function POST(request: Request) {
 
     // 1. Verificar Firma (Seguridad)
     try {
+      console.log('[LINK_WALLET] Iniciando verificación:', { address, nonce, signatureLength: signature?.length });
+      
       const keypair = Keypair.fromPublicKey(address)
       const message = `Sign this message to link your wallet to Crypto College: ${nonce}`
-      const isValid = keypair.verify(Buffer.from(message), Buffer.from(signature, 'base64'))
+      
+      console.log('[LINK_WALLET] Mensaje esperado:', message);
+      
+      // Intentar decodificar firma
+      let signatureBuffer;
+      try {
+        signatureBuffer = Buffer.from(signature, 'base64');
+        console.log('[LINK_WALLET] Firma decodificada (base64 OK), bytes:', signatureBuffer.length);
+      } catch (e) {
+        console.error('[LINK_WALLET] Error decodificando firma base64:', e);
+        return NextResponse.json({ error: 'Formato de firma inválido (no es base64).' }, { status: 400 });
+      }
+
+      const isValid = keypair.verify(Buffer.from(message), signatureBuffer)
+      console.log('[LINK_WALLET] ¿Firma válida?:', isValid);
       
       if (!isValid) {
-        return NextResponse.json({ error: 'La firma de la wallet no es válida.' }, { status: 401 })
+        return NextResponse.json({ 
+          error: 'La firma de la wallet no es válida.',
+          debug: { expectedMessage: message, receivedAddress: address }
+        }, { status: 401 })
       }
-    } catch (e) {
-      console.error('Error verificando firma:', e)
-      return NextResponse.json({ error: 'Error al verificar la propiedad de la wallet.' }, { status: 400 })
+    } catch (e: any) {
+      console.error('[LINK_WALLET] Excepción en verificación de firma:', e);
+      return NextResponse.json({ 
+        error: 'Error al verificar la propiedad de la wallet.',
+        details: e.message 
+      }, { status: 400 })
     }
 
     // 2. Verificar Unicidad Activa (Regla de negocio)

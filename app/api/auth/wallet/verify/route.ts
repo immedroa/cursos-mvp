@@ -19,16 +19,33 @@ export async function POST(request: Request) {
 
     // 1. Verificar firma con Stellar SDK
     try {
+      console.log('[AUTH_VERIFY] Iniciando verificación:', { address, nonce, signatureLength: signature?.length });
+      
       const keypair = Keypair.fromPublicKey(address)
       const message = `Sign this message to login to Crypto College: ${nonce}`
-      const isValid = keypair.verify(Buffer.from(message), Buffer.from(signature, 'base64'))
+      
+      console.log('[AUTH_VERIFY] Mensaje esperado:', message);
+
+      let signatureBuffer;
+      try {
+        signatureBuffer = Buffer.from(signature, 'base64');
+      } catch (e) {
+        console.error('[AUTH_VERIFY] Error decodificando firma base64:', e);
+        return NextResponse.json({ error: 'Firma no es base64' }, { status: 400 });
+      }
+
+      const isValid = keypair.verify(Buffer.from(message), signatureBuffer)
+      console.log('[AUTH_VERIFY] ¿Firma válida?:', isValid);
       
       if (!isValid) {
-        return NextResponse.json({ error: 'Firma inválida' }, { status: 401 })
+        return NextResponse.json({ 
+          error: 'Firma inválida',
+          debug: { expectedMessage: message }
+        }, { status: 401 })
       }
-    } catch (e) {
-      console.error('Error verificando firma:', e)
-      return NextResponse.json({ error: 'Error en verificación' }, { status: 400 })
+    } catch (e: any) {
+      console.error('[AUTH_VERIFY] Excepción en verificación:', e);
+      return NextResponse.json({ error: 'Error en verificación', details: e.message }, { status: 400 })
     }
 
     // 2. Buscar vinculación en user_wallets

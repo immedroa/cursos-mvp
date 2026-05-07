@@ -165,13 +165,16 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
       // 3. Obtener Challenge (Nonce)
       const challengeRes = await fetch('/api/auth/wallet/challenge')
       const { nonce } = await challengeRes.json()
+      console.log('[CONNECT_WALLET] Nonce obtenido:', nonce);
 
       // 4. Firmar Desafío
       const messageToSign = `Sign this message to link your wallet to Crypto College: ${nonce}`
       
       let signature;
       try {
+        console.log('[CONNECT_WALLET] Solicitando firma para el mensaje:', messageToSign);
         signature = await signMessage(messageToSign)
+        console.log('[CONNECT_WALLET] Firma recibida de Freighter (base64):', signature);
       } catch (signErr: any) {
         if (signErr?.message?.includes('User declined') || signErr?.message?.includes('cancel')) {
           alert('Firma cancelada. Es necesario firmar el mensaje para verificar tu identidad.')
@@ -194,6 +197,9 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
       if (!response.ok) {
         if (response.status === 409) {
           alert(data.error + (data.help ? `\n\n${data.help}` : ''))
+        } else if (data.debug || data.details) {
+          console.error('[CONNECT_WALLET] Error técnico:', data);
+          alert(`Error de verificación: ${data.error}\n\nDetalles técnicos: ${data.details || JSON.stringify(data.debug)}`);
         } else {
           throw new Error(data.error || 'Error al guardar la dirección')
         }
