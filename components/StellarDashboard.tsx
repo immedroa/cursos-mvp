@@ -59,7 +59,7 @@ const EVENTS: EventReward[] = [
     name: 'BSL On Tour Perú 2026',
     description: 'Acceso gratuito al Blockchain Summit Latam en Lima. Networking y educación Web3 de alto nivel.',
     bookingUrl: 'https://welcu.com/blockchain-summit-latam/bsl-on-tour-peru-2026',
-    imageUrl: '/events/bsl.png',
+    imageUrl: '/events/blockchainsummitlatam.png',
     discountCode: 'HORIZONBLOCK'
   }
 ]
@@ -541,9 +541,12 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
                 <div key={event.id} className="p-6 rounded-3xl border border-white/5 bg-white/[0.02] hover:border-yellow-400/30 transition-all group">
                   <div className="flex flex-col md:flex-row md:items-center gap-6">
                     <div className="relative w-20 h-20 shrink-0">
-                      <div className="w-full h-full bg-yellow-400/10 rounded-2xl flex items-center justify-center text-yellow-400">
-                         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4v-3a2 2 0 00-2-2H5z"></path></svg>
-                      </div>
+                      <Image 
+                        src={event.imageUrl} 
+                        alt={event.name} 
+                        fill
+                        className="object-cover rounded-2xl grayscale group-hover:grayscale-0 transition-all duration-500"
+                      />
                       <div className="absolute inset-0 rounded-2xl border border-white/10 group-hover:border-yellow-400/30 transition-colors"></div>
                     </div>
                     
