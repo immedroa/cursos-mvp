@@ -492,8 +492,8 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
                 </div>
                 <button 
                   onClick={handleOpenMentors}
-                  disabled={points < 100 || (stellarNetwork?.toUpperCase() !== 'TESTNET' && !!stellarAddress)}
-                  className={`px-6 py-3 rounded-xl font-black text-[9px] uppercase tracking-[0.2em] transition-all ${points >= 100 && (stellarNetwork?.toUpperCase() === 'TESTNET' || !stellarAddress) ? 'bg-white text-black hover:bg-yellow-400' : 'bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed'}`}
+                  disabled={points < 100}
+                  className={`px-6 py-3 rounded-xl font-black text-[9px] uppercase tracking-[0.2em] transition-all ${points >= 100 ? 'bg-white text-black hover:bg-yellow-400' : 'bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed'}`}
                 >
                   Canjear
                 </button>
@@ -510,8 +510,8 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
                 </div>
                 <button 
                   onClick={handleOpenEvents}
-                  disabled={points < 100 || (stellarNetwork?.toUpperCase() !== 'TESTNET' && !!stellarAddress)}
-                  className={`px-6 py-3 rounded-xl font-black text-[9px] uppercase tracking-[0.2em] transition-all ${points >= 100 && (stellarNetwork?.toUpperCase() === 'TESTNET' || !stellarAddress) ? 'bg-white text-black hover:bg-yellow-400' : 'bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed'}`}
+                  disabled={points < 100}
+                  className={`px-6 py-3 rounded-xl font-black text-[9px] uppercase tracking-[0.2em] transition-all ${points >= 100 ? 'bg-white text-black hover:bg-yellow-400' : 'bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed'}`}
                 >
                   Canjear
                 </button>
