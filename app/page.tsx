@@ -203,15 +203,25 @@ export default async function LandingPage() {
             Únete a la comunidad fundadora
           </div>
 
-          <h3 className="text-6xl md:text-9xl font-black mb-10 tracking-tighter leading-none">S/ 4.90</h3>
+          <h3 className="text-6xl md:text-9xl font-black mb-10 tracking-tighter leading-none flex flex-col md:flex-row items-center justify-center gap-4">
+            <span className="line-through text-neutral-700 text-4xl md:text-6xl">S/ 4.90</span>
+            <span className="text-yellow-400">ACCESO GRATIS</span>
+          </h3>
           
           <p className="text-neutral-400 text-xl md:text-2xl mb-16 max-w-2xl mx-auto leading-relaxed">
-            Acceso total por 6 meses. Gamificación activa, recompensas en XLM y mentorías 1:1 incluidas.
+            Acceso total al BETA. Gamificación activa, recompensas en XLM y mentorías 1:1 incluidas.
           </p>
 
           <div className="flex flex-col items-center gap-12">
-            <div className="bg-white/5 border border-white/10 p-12 rounded-[50px] backdrop-blur-sm relative group shadow-2xl">
-              <div className="bg-white p-4 rounded-[40px] mb-8 shadow-[0_0_60px_rgba(255,255,255,0.05)] transition-transform group-hover:scale-[1.02]">
+            <div className="bg-white/5 border border-white/10 p-12 rounded-[50px] backdrop-blur-sm relative group shadow-2xl overflow-hidden">
+              {/* Cruz encima del cuadro de pago */}
+              <div className="absolute inset-0 z-20 pointer-events-none flex items-center justify-center">
+                <div className="relative w-full h-full">
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-2 bg-red-500/80 rotate-45"></div>
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-2 bg-red-500/80 -rotate-45"></div>
+                </div>
+              </div>
+              <div className="bg-white p-4 rounded-[40px] mb-8 shadow-[0_0_60px_rgba(255,255,255,0.05)] transition-transform group-hover:scale-[1.02] opacity-40 grayscale">
                 <Image 
                   src="/yape-qr.png" 
                   alt="Yape QR Code" 
@@ -220,8 +230,8 @@ export default async function LandingPage() {
                   className="rounded-3xl aspect-square object-contain"
                 />
               </div>
-              <p className="text-3xl md:text-5xl font-black text-white uppercase tracking-tight mb-2">965 413 449</p>
-              <p className="text-[10px] font-black text-yellow-400 uppercase tracking-[0.4em]">Yape • Plin • Transferencia</p>
+              <p className="text-3xl md:text-5xl font-black text-white/30 uppercase tracking-tight mb-2">965 413 449</p>
+              <p className="text-[10px] font-black text-red-500 uppercase tracking-[0.4em] relative z-30 bg-black/80 px-2 py-1 rounded">No requerido para el BETA</p>
             </div>
 
             <div className="flex flex-col md:flex-row gap-6 w-full max-w-2xl">

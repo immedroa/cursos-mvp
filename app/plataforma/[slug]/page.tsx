@@ -39,14 +39,24 @@ export default async function CoursePage({
     redirect('/acceso')
   }
 
-  const { data: profile } = await supabase
+  let { data: profile } = await supabase
     .from('profiles')
     .select('email, has_access, points')
     .eq('id', user.id)
     .single()
 
   if (!profile) {
-    redirect('/acceso')
+    // Crear perfil al vuelo si no existe
+    const { data: newProfile, error: createError } = await supabase
+      .from('profiles')
+      .insert([
+        { id: user.id, email: user.email, has_access: true, points: 0 }
+      ])
+      .select()
+      .single()
+    
+    if (createError) redirect('/acceso')
+    profile = newProfile
   }
 
   // Acceso simplificado: si está autenticado, tiene acceso.

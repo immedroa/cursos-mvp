@@ -31,14 +31,27 @@ export default async function PlataformaPage() {
     redirect('/acceso')
   }
 
-  const { data: profile, error: profileError } = await supabase
+  let { data: profile } = await supabase
     .from('profiles')
     .select('email, has_access, points, stellar_address')
     .eq('id', user.id)
     .single()
 
-  if (profileError || !profile) {
-    redirect('/acceso')
+  if (!profile) {
+    // Crear perfil al vuelo si no existe
+    const { data: newProfile, error: createError } = await supabase
+      .from('profiles')
+      .insert([
+        { id: user.id, email: user.email, has_access: true, points: 0 }
+      ])
+      .select()
+      .single()
+    
+    if (createError) {
+      console.error('Error creando perfil en liberación:', createError)
+      redirect('/acceso')
+    }
+    profile = newProfile
   }
 
   const { data: coursesData, error: coursesError } = await supabase
@@ -174,7 +187,7 @@ export default async function PlataformaPage() {
               <div className="space-y-4">
                 <h3 className="text-xs font-black uppercase tracking-[0.3em] text-white/40">Status de Acceso</h3>
                 <div className="space-y-2">
-                  <StatusItem label="Membresía" value="Premium Alpha" active />
+                  <StatusItem label="Membresía" value="Beta Liberada" active />
                   <StatusItem label="Nivel" value="On-Chain Scout" />
                 </div>
               </div>
