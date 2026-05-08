@@ -55,9 +55,12 @@ export default async function CoursePage({
       .select()
       .single()
     
-    if (createError) redirect('/acceso')
+    if (createError || !newProfile) redirect('/acceso')
     profile = newProfile
   }
+
+  // Garantizar que profile no es null para TS
+  if (!profile) redirect('/acceso')
 
   // Acceso simplificado: si está autenticado, tiene acceso.
 

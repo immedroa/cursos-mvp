@@ -47,12 +47,15 @@ export default async function PlataformaPage() {
       .select()
       .single()
     
-    if (createError) {
+    if (createError || !newProfile) {
       console.error('Error creando perfil en liberación:', createError)
       redirect('/acceso')
     }
     profile = newProfile
   }
+
+  // Garantizar que profile no es null para TS
+  if (!profile) redirect('/acceso')
 
   const { data: coursesData, error: coursesError } = await supabase
     .from('courses')
