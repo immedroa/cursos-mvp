@@ -866,6 +866,6 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
           </div>
         </div>
       )}
-    </>
+    </div>
   )
 }
