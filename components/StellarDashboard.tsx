@@ -330,138 +330,94 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
   const truncateAddress = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`
 
   return (
-    <>
-      {/* 1. ZONA RESUMEN PERMANENTE: Header compacto de status */}
-      <section className="relative overflow-hidden p-8 rounded-[40px] border border-white/10 bg-white/[0.02] backdrop-blur-md shadow-2xl mb-12 animate-in fade-in slide-in-from-top-4 duration-700">
-        {/* Elementos decorativos de fondo */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-400/5 blur-[100px] -mr-32 -mt-32 rounded-full"></div>
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/5 blur-[80px] -ml-24 -mb-24 rounded-full"></div>
-        
-        <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
-          {/* Perfil */}
-          <div className="flex items-center gap-5">
-            <div className="relative">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-black shadow-lg shadow-yellow-400/20">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-              </div>
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 border-4 border-[#0A0A0A] rounded-full"></div>
-            </div>
-            <div>
-              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-neutral-500 mb-1">Estudiante</h3>
-              <p className="text-lg font-black text-white leading-none truncate max-w-[150px]">{userEmail.split('@')[0]}</p>
-              <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-1.5 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                Online
-              </p>
+    <div className="min-h-screen flex flex-col">
+      {/* 1. HEADER PERMANENTE: Estatus y Acciones */}
+      <header className="border-b border-white/5 bg-[#080808]/90 backdrop-blur-xl sticky top-0 z-[100] w-full">
+        <div className="mx-auto max-w-7xl px-6 py-3 flex items-center justify-between gap-4">
+          
+          {/* Izquierda: Logo y Branding */}
+          <div className="flex items-center gap-3 shrink-0">
+            <Image 
+              src="/logo.png" 
+              alt="Crypto College" 
+              width={28} 
+              height={28} 
+              className="rounded-lg shadow-[0_0_15px_rgba(250,204,21,0.1)]"
+            />
+            <div className="hidden sm:flex flex-col">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Dashboard</span>
+              <span className="text-[8px] font-bold text-neutral-500 uppercase tracking-widest leading-none mt-0.5">Crypto College</span>
             </div>
           </div>
 
-          {/* Puntos y Acciones de Canje */}
-          <div className="flex flex-col items-center md:border-x border-white/5 px-8">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 mb-3">Balance de Aprendizaje</p>
-            <div className="flex flex-col items-center gap-4 w-full">
-              <div className="flex items-end gap-3">
-                <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-neutral-500 leading-none tabular-nums">{points}</span>
-                <div className="flex flex-col mb-1">
-                  <span className="text-[10px] font-black text-yellow-400 uppercase tracking-widest leading-none">Puntos</span>
-                  <span className="text-[8px] font-bold text-neutral-600 uppercase tracking-widest mt-1">Acumulados</span>
-                </div>
-              </div>
-              
-              {/* Botones de acción rápida de canje */}
-              <div className="flex gap-2 w-full max-w-[280px]">
-                <button 
-                  onClick={handleOpenMentors}
-                  disabled={points < 100}
-                  className={`flex-1 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
-                    points >= 100 
-                    ? 'bg-yellow-400 text-black hover:scale-105 shadow-xl shadow-yellow-400/20' 
-                    : 'bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed'
-                  }`}
-                >
-                  {points < 100 ? 'Faltan Puntos' : 'Canjear Mentoría'}
-                </button>
-                <button 
-                  onClick={handleOpenEvents}
-                  disabled={points < 100}
-                  className={`flex-1 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
-                    points >= 100 
-                    ? 'bg-white text-black hover:scale-105 shadow-xl shadow-white/5' 
-                    : 'bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed'
-                  }`}
-                >
-                  {points < 100 ? 'Bloqueado' : 'Canjear Evento'}
-                </button>
-              </div>
+          {/* Centro: Balance e Identidad (La "Acción de Canje" solicitada) */}
+          <div className="flex items-center gap-3 md:gap-6 flex-grow justify-center">
+            {/* Badge de Puntos */}
+            <div className="flex items-center gap-2 bg-yellow-400/10 px-3 py-1.5 rounded-full border border-yellow-400/20 shadow-[0_0_15px_rgba(250,204,21,0.05)]">
+              <span className="text-sm font-black text-yellow-400 leading-none tabular-nums">{points}</span>
+              <span className="text-[8px] font-black text-yellow-400/60 uppercase tracking-widest">PTS</span>
             </div>
-          </div>
 
-          {/* Wallet Status */}
-          <div className="flex flex-col items-end">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 mb-3">Identidad On-Chain</p>
+            {/* Badge de Wallet */}
             {stellarAddress ? (
-              <div className="flex flex-col items-end w-full">
-                <div className="relative px-5 py-4 rounded-3xl bg-white/[0.03] border border-white/10 hover:border-blue-400/30 transition-all w-full">
-                  <div className="flex items-center justify-between gap-4 mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.5)]"></div>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">{stellarNetwork || 'STELLAR'}</span>
-                    </div>
-                    <span className="text-xs font-mono text-white/80">{truncateAddress(stellarAddress)}</span>
-                  </div>
-                  
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); handleUnlinkWallet(); }}
-                    className="w-full py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[9px] font-black uppercase tracking-widest transition-all border border-red-500/20"
-                  >
-                    Desvincular Wallet
-                  </button>
-                </div>
+              <div className="hidden md:flex items-center gap-2 bg-blue-500/10 px-3 py-1.5 rounded-full border border-blue-500/20">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse shadow-[0_0_8px_rgba(96,165,250,0.5)]"></div>
+                <span className="text-[9px] font-mono text-blue-300/80">{truncateAddress(stellarAddress)}</span>
+                <button 
+                  onClick={handleUnlinkWallet}
+                  className="ml-1 text-blue-300/40 hover:text-red-400 transition-colors"
+                  title="Desvincular"
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
               </div>
             ) : isCheckingFreighter ? (
-              <div className="flex items-center gap-3 px-6 py-3 border border-white/5 bg-white/[0.02] rounded-2xl">
-                <div className="w-3 h-3 border-2 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin"></div>
-                <span className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Verificando wallet...</span>
-              </div>
-            ) : !hasFreighter ? (
-              <div className="w-full max-w-[280px]">
-                <div className="p-4 rounded-3xl bg-orange-500/5 border border-orange-500/20 mb-3">
-                  <p className="text-[10px] font-bold text-orange-200/80 leading-relaxed mb-3">
-                    No detectamos Freighter. Instálala para activar tus beneficios on-chain.
-                  </p>
-                  <a 
-                    href="https://www.freighter.app/" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-[9px] font-black text-orange-400 hover:text-orange-300 uppercase tracking-widest transition-colors"
-                  >
-                    Instalar Freighter
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                  </a>
-                </div>
-                <button 
-                  disabled 
-                  className="w-full px-8 py-3 rounded-2xl bg-white/5 text-neutral-600 font-black text-[10px] uppercase tracking-[0.2em] cursor-not-allowed border border-white/5"
-                >
-                  VINCULAR WALLET
-                </button>
+              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-full border border-white/5">
+                <div className="w-2 h-2 border-2 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin"></div>
+                <span className="text-[8px] font-black text-neutral-500 uppercase tracking-widest">Buscando...</span>
               </div>
             ) : (
               <button 
-                onClick={handleConnectWallet} 
-                disabled={loading} 
-                className="relative group overflow-hidden px-8 py-3 rounded-2xl bg-white text-black font-black text-[10px] uppercase tracking-[0.2em] transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                onClick={handleConnectWallet}
+                className="hidden md:flex items-center gap-2 bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-full border border-white/10 transition-all group"
               >
-                <span className="relative z-10">{loading ? 'CONECTANDO...' : 'VINCULAR WALLET'}</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="w-1.5 h-1.5 rounded-full bg-neutral-600 group-hover:bg-yellow-400 transition-colors"></div>
+                <span className="text-[9px] font-black text-neutral-400 group-hover:text-white uppercase tracking-widest">Conectar Wallet</span>
               </button>
             )}
+
+            {/* Acciones Rápidas (Solo visibles si hay puntos) */}
+            <div className="hidden lg:flex items-center gap-2 border-l border-white/10 pl-6">
+              <button 
+                onClick={handleOpenMentors}
+                disabled={points < 100}
+                className={`px-4 py-1.5 rounded-lg font-black text-[9px] uppercase tracking-widest transition-all ${
+                  points >= 100 
+                  ? 'bg-yellow-400 text-black hover:scale-105' 
+                  : 'text-neutral-600 opacity-40 cursor-not-allowed'
+                }`}
+              >
+                Canjear Mentoría
+              </button>
+            </div>
+          </div>
+
+          {/* Derecha: Perfil y Logout */}
+          <div className="flex items-center gap-6 shrink-0">
+            <span className="hidden xl:block text-[9px] font-bold text-neutral-600 uppercase tracking-widest truncate max-w-[120px]">{userEmail}</span>
+            <form action="/auth/signout" method="post">
+              <button className="text-[10px] font-black uppercase tracking-widest text-neutral-500 hover:text-white transition-all">
+                Logout
+              </button>
+            </form>
           </div>
         </div>
-      </section>
+      </header>
 
-      {/* Selector de Pestañas */}
-      <nav className="flex items-center gap-12 mb-12 border-b border-white/5">
+      {/* 2. CONTENIDO PRINCIPAL */}
+      <div className="mx-auto max-w-7xl w-full px-6 py-12">
+        {/* Selector de Pestañas */}
+        <nav className="flex items-center gap-12 mb-12 border-b border-white/5">
         <button 
           onClick={() => setActiveTab('AULA')}
           className={`pb-4 text-[11px] font-black uppercase tracking-[0.4em] transition-all relative ${

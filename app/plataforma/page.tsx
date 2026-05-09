@@ -96,39 +96,7 @@ export default async function PlataformaPage() {
 
   return (
     <main className="min-h-screen bg-[#050505] text-white selection:bg-yellow-400 selection:text-black">
-      {/* Sidebar / Header Combo */}
-      <header className="border-b border-white/5 bg-[#080808]/80 backdrop-blur-xl sticky top-0 z-50">
-        <div className="mx-auto max-w-7xl px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Image 
-              src="/logo.png" 
-              alt="Crypto College" 
-              width={32} 
-              height={32} 
-              className="rounded-lg shadow-[0_0_10px_rgba(250,204,21,0.1)]"
-            />
-            <h1 className="text-sm font-black tracking-[0.2em] uppercase">
-              <span className="text-white/40">Crypto College</span>
-              <span className="mx-2 text-yellow-400/50">|</span>
-              <span className="text-white">Dashboard</span>
-            </h1>
-          </div>
-
-          <div className="flex items-center gap-6">
-            <span className="hidden md:block text-xs font-bold text-neutral-500 uppercase tracking-widest">{profile.email}</span>
-            <form action="/auth/signout" method="post">
-              <button className="text-xs font-black uppercase tracking-widest text-neutral-400 hover:text-white border-b-2 border-transparent hover:border-yellow-400 py-1 transition-all">
-                Logout
-              </button>
-            </form>
-          </div>
-        </div>
-      </header>
-
-      <div className="mx-auto max-w-7xl px-6 py-12">
-        
-        {/* Nueva Sección Stellar & Puntos */}
-        <StellarDashboard 
+      <StellarDashboard 
           initialPoints={profile.points || 0} 
           initialStellarAddress={profile.stellar_address} 
           userEmail={profile.email}
@@ -204,7 +172,6 @@ export default async function PlataformaPage() {
             </div>
           }
         />
-      </div>
     </main>
   )
 }
