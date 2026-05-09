@@ -91,6 +91,7 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
   const [showUnlinkModal, setShowUnlinkModal] = useState(false)
   const [showFreighterModal, setShowFreighterModal] = useState(false)
   const [unlinkLoading, setUnlinkLoading] = useState(false)
+  const [isRedeemMenuOpen, setIsRedeemMenuOpen] = useState(false)
 
   // --- NUEVOS ESTADOS DE DETECCIÓN ---
   const [hasFreighter, setHasFreighter] = useState<boolean>(false)
@@ -386,19 +387,52 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
               </button>
             )}
 
-            {/* Acciones Rápidas (Solo visibles si hay puntos) */}
-            <div className="hidden lg:flex items-center gap-2 border-l border-white/10 pl-6">
+            {/* Menú Desplegable de Canje */}
+            <div className="hidden lg:flex items-center gap-2 border-l border-white/10 pl-6 relative">
               <button 
-                onClick={handleOpenMentors}
+                onClick={() => setIsRedeemMenuOpen(!isRedeemMenuOpen)}
                 disabled={points < 100}
-                className={`px-4 py-1.5 rounded-lg font-black text-[9px] uppercase tracking-widest transition-all ${
+                className={`flex items-center gap-2 px-4 py-1.5 rounded-lg font-black text-[9px] uppercase tracking-widest transition-all ${
                   points >= 100 
-                  ? 'bg-yellow-400 text-black hover:scale-105' 
+                  ? 'bg-yellow-400 text-black hover:scale-105 shadow-lg shadow-yellow-400/20' 
                   : 'text-neutral-600 opacity-40 cursor-not-allowed'
                 }`}
               >
-                Canjear Mentoría
+                Canjear puntos
+                <svg className={`w-3 h-3 transition-transform ${isRedeemMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19 9l-7 7-7-7"></path>
+                </svg>
               </button>
+
+              {/* Dropdown Menu */}
+              {isRedeemMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setIsRedeemMenuOpen(false)}></div>
+                  <div className="absolute top-full mt-3 right-0 w-56 bg-[#0A0A0A] border border-white/10 rounded-2xl shadow-2xl p-2 z-20 animate-in fade-in zoom-in-95 duration-200">
+                    <button 
+                      onClick={() => { handleOpenMentors(); setIsRedeemMenuOpen(false); }}
+                      className="w-full text-left px-4 py-3 rounded-xl hover:bg-white/5 transition-colors group"
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-white group-hover:text-yellow-400">Mentoría 1:1</span>
+                        <span className="text-[8px] font-black text-neutral-500 italic">100 PTS</span>
+                      </div>
+                      <p className="text-[9px] text-neutral-500 mt-1">Sesión privada con expertos.</p>
+                    </button>
+                    <div className="h-px bg-white/5 my-1 mx-2"></div>
+                    <button 
+                      onClick={() => { handleOpenEvents(); setIsRedeemMenuOpen(false); }}
+                      className="w-full text-left px-4 py-3 rounded-xl hover:bg-white/5 transition-colors group"
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-white group-hover:text-yellow-400">Entradas VIP</span>
+                        <span className="text-[8px] font-black text-neutral-500 italic">100 PTS</span>
+                      </div>
+                      <p className="text-[9px] text-neutral-500 mt-1">Blockchain Summit Latam.</p>
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
