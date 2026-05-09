@@ -331,8 +331,137 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
 
   return (
     <>
-      {/* Selector de Pestañas con mejor spacing */}
-      <nav className="flex items-center gap-12 mb-12 border-b border-white/5 pt-4">
+      {/* 1. ZONA RESUMEN PERMANENTE: Header compacto de status */}
+      <section className="relative overflow-hidden p-8 rounded-[40px] border border-white/10 bg-white/[0.02] backdrop-blur-md shadow-2xl mb-12 animate-in fade-in slide-in-from-top-4 duration-700">
+        {/* Elementos decorativos de fondo */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-400/5 blur-[100px] -mr-32 -mt-32 rounded-full"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/5 blur-[80px] -ml-24 -mb-24 rounded-full"></div>
+        
+        <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+          {/* Perfil */}
+          <div className="flex items-center gap-5">
+            <div className="relative">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-black shadow-lg shadow-yellow-400/20">
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 border-4 border-[#0A0A0A] rounded-full"></div>
+            </div>
+            <div>
+              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-neutral-500 mb-1">Estudiante</h3>
+              <p className="text-lg font-black text-white leading-none truncate max-w-[150px]">{userEmail.split('@')[0]}</p>
+              <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-1.5 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                Online
+              </p>
+            </div>
+          </div>
+
+          {/* Puntos y Acciones de Canje */}
+          <div className="flex flex-col items-center md:border-x border-white/5 px-8">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 mb-3">Balance de Aprendizaje</p>
+            <div className="flex flex-col items-center gap-4 w-full">
+              <div className="flex items-end gap-3">
+                <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-neutral-500 leading-none tabular-nums">{points}</span>
+                <div className="flex flex-col mb-1">
+                  <span className="text-[10px] font-black text-yellow-400 uppercase tracking-widest leading-none">Puntos</span>
+                  <span className="text-[8px] font-bold text-neutral-600 uppercase tracking-widest mt-1">Acumulados</span>
+                </div>
+              </div>
+              
+              {/* Botones de acción rápida de canje */}
+              <div className="flex gap-2 w-full max-w-[280px]">
+                <button 
+                  onClick={handleOpenMentors}
+                  disabled={points < 100}
+                  className={`flex-1 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
+                    points >= 100 
+                    ? 'bg-yellow-400 text-black hover:scale-105 shadow-xl shadow-yellow-400/20' 
+                    : 'bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed'
+                  }`}
+                >
+                  {points < 100 ? 'Faltan Puntos' : 'Canjear Mentoría'}
+                </button>
+                <button 
+                  onClick={handleOpenEvents}
+                  disabled={points < 100}
+                  className={`flex-1 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
+                    points >= 100 
+                    ? 'bg-white text-black hover:scale-105 shadow-xl shadow-white/5' 
+                    : 'bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed'
+                  }`}
+                >
+                  {points < 100 ? 'Bloqueado' : 'Canjear Evento'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Wallet Status */}
+          <div className="flex flex-col items-end">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 mb-3">Identidad On-Chain</p>
+            {stellarAddress ? (
+              <div className="flex flex-col items-end w-full">
+                <div className="relative px-5 py-4 rounded-3xl bg-white/[0.03] border border-white/10 hover:border-blue-400/30 transition-all w-full">
+                  <div className="flex items-center justify-between gap-4 mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.5)]"></div>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">{stellarNetwork || 'STELLAR'}</span>
+                    </div>
+                    <span className="text-xs font-mono text-white/80">{truncateAddress(stellarAddress)}</span>
+                  </div>
+                  
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleUnlinkWallet(); }}
+                    className="w-full py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[9px] font-black uppercase tracking-widest transition-all border border-red-500/20"
+                  >
+                    Desvincular Wallet
+                  </button>
+                </div>
+              </div>
+            ) : isCheckingFreighter ? (
+              <div className="flex items-center gap-3 px-6 py-3 border border-white/5 bg-white/[0.02] rounded-2xl">
+                <div className="w-3 h-3 border-2 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin"></div>
+                <span className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Verificando wallet...</span>
+              </div>
+            ) : !hasFreighter ? (
+              <div className="w-full max-w-[280px]">
+                <div className="p-4 rounded-3xl bg-orange-500/5 border border-orange-500/20 mb-3">
+                  <p className="text-[10px] font-bold text-orange-200/80 leading-relaxed mb-3">
+                    No detectamos Freighter. Instálala para activar tus beneficios on-chain.
+                  </p>
+                  <a 
+                    href="https://www.freighter.app/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-[9px] font-black text-orange-400 hover:text-orange-300 uppercase tracking-widest transition-colors"
+                  >
+                    Instalar Freighter
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                  </a>
+                </div>
+                <button 
+                  disabled 
+                  className="w-full px-8 py-3 rounded-2xl bg-white/5 text-neutral-600 font-black text-[10px] uppercase tracking-[0.2em] cursor-not-allowed border border-white/5"
+                >
+                  VINCULAR WALLET
+                </button>
+              </div>
+            ) : (
+              <button 
+                onClick={handleConnectWallet} 
+                disabled={loading} 
+                className="relative group overflow-hidden px-8 py-3 rounded-2xl bg-white text-black font-black text-[10px] uppercase tracking-[0.2em] transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+              >
+                <span className="relative z-10">{loading ? 'CONECTANDO...' : 'VINCULAR WALLET'}</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              </button>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Selector de Pestañas */}
+      <nav className="flex items-center gap-12 mb-12 border-b border-white/5">
         <button 
           onClick={() => setActiveTab('AULA')}
           className={`pb-4 text-[11px] font-black uppercase tracking-[0.4em] transition-all relative ${
@@ -358,188 +487,48 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
       </nav>
 
       {activeTab === 'AULA' ? (
-        <div className="space-y-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
           
-          {/* 1. ZONA RESUMEN: Header compacto de status */}
-          <section className="relative overflow-hidden p-8 rounded-[40px] border border-white/10 bg-white/[0.02] backdrop-blur-md shadow-2xl">
-            {/* Elementos decorativos de fondo */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-400/5 blur-[100px] -mr-32 -mt-32 rounded-full"></div>
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/5 blur-[80px] -ml-24 -mb-24 rounded-full"></div>
-            
-            <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
-              {/* Perfil */}
-              <div className="flex items-center gap-5">
-                <div className="relative">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-black shadow-lg shadow-yellow-400/20">
-                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 border-4 border-[#0A0A0A] rounded-full"></div>
-                </div>
-                <div>
-                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-neutral-500 mb-1">Estudiante</h3>
-                  <p className="text-lg font-black text-white leading-none truncate max-w-[150px]">{userEmail.split('@')[0]}</p>
-                  <p className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest mt-1.5 flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    Online
-                  </p>
-                </div>
-              </div>
-
-              {/* Puntos */}
-              <div className="flex flex-col items-center md:border-x border-white/5 px-8">
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 mb-3">Balance de Aprendizaje</p>
-                <div className="flex flex-col items-center gap-4 w-full">
-                  <div className="flex items-end gap-3">
-                    <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-neutral-500 leading-none tabular-nums">{points}</span>
-                    <div className="flex flex-col mb-1">
-                      <span className="text-[10px] font-black text-yellow-400 uppercase tracking-widest leading-none">Puntos</span>
-                      <span className="text-[8px] font-bold text-neutral-600 uppercase tracking-widest mt-1">Acumulados</span>
-                    </div>
-                  </div>
-                  
-                  {/* Botones de acción rápida de canje */}
-                  <div className="flex gap-2 w-full max-w-[240px]">
-                    <button 
-                      onClick={handleOpenMentors}
-                      disabled={points < 100}
-                      className={`flex-1 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all ${
-                        points >= 100 
-                        ? 'bg-yellow-400 text-black hover:scale-105 shadow-lg shadow-yellow-400/10' 
-                        : 'bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed'
-                      }`}
-                    >
-                      {points < 100 ? 'Faltan Puntos' : 'Canjear Mentoría'}
-                    </button>
-                    <button 
-                      onClick={handleOpenEvents}
-                      disabled={points < 100}
-                      className={`flex-1 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all ${
-                        points >= 100 
-                        ? 'bg-white text-black hover:scale-105 shadow-lg shadow-white/5' 
-                        : 'bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed'
-                      }`}
-                    >
-                      {points < 100 ? 'Bloqueado' : 'Canjear Evento'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Wallet Status */}
-              <div className="flex flex-col items-end">
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 mb-3">Identidad On-Chain</p>
-                {stellarAddress ? (
-                  <div className="flex flex-col items-end w-full">
-                    <div className="relative px-5 py-4 rounded-3xl bg-white/[0.03] border border-white/10 hover:border-blue-400/30 transition-all w-full">
-                      <div className="flex items-center justify-between gap-4 mb-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.5)]"></div>
-                          <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">{stellarNetwork || 'STELLAR'}</span>
-                        </div>
-                        <span className="text-xs font-mono text-white/80">{truncateAddress(stellarAddress)}</span>
-                      </div>
-                      
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleUnlinkWallet(); }}
-                        className="w-full py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[9px] font-black uppercase tracking-widest transition-all border border-red-500/20"
-                      >
-                        Desvincular Wallet
-                      </button>
-                    </div>
-                  </div>
-                ) : isCheckingFreighter ? (
-                  <div className="flex items-center gap-3 px-6 py-3 border border-white/5 bg-white/[0.02] rounded-2xl">
-                    <div className="w-3 h-3 border-2 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin"></div>
-                    <span className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Verificando wallet...</span>
-                  </div>
-                ) : !hasFreighter ? (
-                  <div className="w-full max-w-[280px]">
-                    <div className="p-4 rounded-3xl bg-orange-500/5 border border-orange-500/20 mb-3">
-                      <p className="text-[10px] font-bold text-orange-200/80 leading-relaxed mb-3">
-                        No detectamos Freighter. Instálala para activar tus beneficios on-chain.
-                      </p>
-                      <a 
-                        href="https://www.freighter.app/" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 text-[9px] font-black text-orange-400 hover:text-orange-300 uppercase tracking-widest transition-colors"
-                      >
-                        Instalar Freighter
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
-                      </a>
-                    </div>
-                    <button 
-                      disabled 
-                      className="w-full px-8 py-3 rounded-2xl bg-white/5 text-neutral-600 font-black text-[10px] uppercase tracking-[0.2em] cursor-not-allowed border border-white/5"
-                    >
-                      VINCULAR WALLET
-                    </button>
-                  </div>
-                ) : (
-                  <button 
-                    onClick={handleConnectWallet} 
-                    disabled={loading} 
-                    className="relative group overflow-hidden px-8 py-3 rounded-2xl bg-white text-black font-black text-[10px] uppercase tracking-[0.2em] transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
-                  >
-                    <span className="relative z-10">{loading ? 'CONECTANDO...' : 'VINCULAR WALLET'}</span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                  </button>
-                )}
-                <p className="text-[9px] text-neutral-600 mt-3 text-right">
-                  {stellarAddress ? 'Tu wallet es tu identidad educativa.' : (hasFreighter ? 'Conecta Freighter para puntos on-chain.' : 'Requerido para recompensas.')}
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* 2. SIGUE APRENDIENDO: Featured Content */}
-          <section>
-            <div className="mb-8">
-              <h2 className="text-2xl font-black tracking-tighter uppercase leading-none">Sigue aprendiendo</h2>
-              <p className="text-neutral-500 text-xs mt-1">Retoma tu progreso y acumula más puntos on-chain.</p>
-            </div>
-            {featured}
-          </section>
-
-          {/* 3. CANJEA TUS PUNTOS: Marketplace unificado */}
-          <section className="py-12 border-y border-white/5">
-            <div className="mb-10 text-center">
-              <h2 className="text-xl font-black tracking-tighter uppercase leading-none">Canjea tus puntos</h2>
-              <p className="text-neutral-500 text-[10px] uppercase tracking-widest mt-2">Beneficios exclusivos para alumnos destacados</p>
+          {/* 1. CANJEA TUS PUNTOS: Marketplace prioritario */}
+          <section className="pb-12 border-b border-white/5">
+            <div className="mb-10">
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-400 mb-2">Marketplace</p>
+              <h2 className="text-3xl font-black tracking-tighter uppercase leading-none">Canjea tus puntos</h2>
+              <p className="text-neutral-500 text-xs mt-2">Beneficios exclusivos para alumnos destacados de Crypto College.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
               {/* Reward: Mentoría */}
-              <div className="p-6 rounded-[32px] border border-white/10 bg-white/[0.01] hover:bg-white/[0.03] transition-all flex items-center justify-between gap-6 group">
+              <div className="p-8 rounded-[40px] border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] transition-all flex items-center justify-between gap-6 group">
                 <div className="flex-1">
-                  <span className="bg-yellow-400/10 text-yellow-400 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border border-yellow-400/20 mb-3 inline-block">
+                  <span className="bg-yellow-400/10 text-yellow-400 text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-yellow-400/20 mb-4 inline-block">
                     100 PTS
                   </span>
-                  <h4 className="text-sm font-black uppercase tracking-tight mb-1">Mentoría 1:1</h4>
-                  <p className="text-[11px] text-neutral-500 leading-relaxed">Sesión privada con expertos.</p>
+                  <h4 className="text-lg font-black uppercase tracking-tight mb-1">Mentoría 1:1</h4>
+                  <p className="text-sm text-neutral-500 leading-relaxed">Sesión privada con expertos para revisar tu proyecto o carrera.</p>
                 </div>
                 <button 
                   onClick={handleOpenMentors}
                   disabled={points < 100}
-                  className={`px-6 py-3 rounded-xl font-black text-[9px] uppercase tracking-[0.2em] transition-all ${points >= 100 ? 'bg-white text-black hover:bg-yellow-400' : 'bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed'}`}
+                  className={`px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all ${points >= 100 ? 'bg-white text-black hover:bg-yellow-400 shadow-xl shadow-white/5' : 'bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed'}`}
                 >
                   Canjear
                 </button>
               </div>
 
               {/* Reward: Eventos */}
-              <div className="p-6 rounded-[32px] border border-white/10 bg-white/[0.01] hover:bg-white/[0.03] transition-all flex items-center justify-between gap-6 group">
+              <div className="p-8 rounded-[40px] border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] transition-all flex items-center justify-between gap-6 group">
                 <div className="flex-1">
-                  <span className="bg-yellow-400/10 text-yellow-400 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest border border-yellow-400/20 mb-3 inline-block">
+                  <span className="bg-yellow-400/10 text-yellow-400 text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-yellow-400/20 mb-4 inline-block">
                     100 PTS
                   </span>
-                  <h4 className="text-sm font-black uppercase tracking-tight mb-1">Entradas</h4>
-                  <p className="text-[11px] text-neutral-500 leading-relaxed">Blockchain Summit Latam.</p>
+                  <h4 className="text-lg font-black uppercase tracking-tight mb-1">Entradas VIP</h4>
+                  <p className="text-sm text-neutral-500 leading-relaxed">Pases para el Blockchain Summit Latam y otros eventos clave.</p>
                 </div>
                 <button 
                   onClick={handleOpenEvents}
                   disabled={points < 100}
-                  className={`px-6 py-3 rounded-xl font-black text-[9px] uppercase tracking-[0.2em] transition-all ${points >= 100 ? 'bg-white text-black hover:bg-yellow-400' : 'bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed'}`}
+                  className={`px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all ${points >= 100 ? 'bg-white text-black hover:bg-yellow-400 shadow-xl shadow-white/5' : 'bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed'}`}
                 >
                   Canjear
                 </button>
@@ -547,17 +536,28 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
             </div>
           </section>
 
-          {/* 4. BIBLIOTECA: Library Content */}
-          <section>
+          {/* 2. SIGUE APRENDIENDO: Featured Content */}
+          <section className="py-12 border-b border-white/5">
             <div className="mb-10">
-              <h2 className="text-2xl font-black tracking-tighter uppercase leading-none">Tu Biblioteca</h2>
-              <p className="text-neutral-500 text-xs mt-1">Explora otros cursos y expande tu conocimiento Web3.</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-400 mb-2">Tu progreso</p>
+              <h2 className="text-3xl font-black tracking-tighter uppercase leading-none">Sigue aprendiendo</h2>
+              <p className="text-neutral-500 text-xs mt-2">Retoma tu progreso y acumula más puntos on-chain.</p>
+            </div>
+            {featured}
+          </section>
+
+          {/* 3. BIBLIOTECA: Library Content */}
+          <section className="py-12 border-b border-white/5">
+            <div className="mb-10">
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-400 mb-2">Explorar</p>
+              <h2 className="text-3xl font-black tracking-tighter uppercase leading-none">Tu Biblioteca</h2>
+              <p className="text-neutral-500 text-xs mt-2">Explora otros cursos y expande tu conocimiento Web3.</p>
             </div>
             {library}
           </section>
 
-          {/* 5. SECUNDARIOS: Footer & Info */}
-          <footer className="pt-16 pb-8 border-t border-white/5 flex flex-col md:flex-row gap-12 items-start opacity-60 hover:opacity-100 transition-opacity">
+          {/* 4. SECUNDARIOS: Footer & Info */}
+          <footer className="pt-16 pb-8 flex flex-col md:flex-row gap-12 items-start opacity-60 hover:opacity-100 transition-opacity">
             <div className="flex-1">
                {secondary}
             </div>
