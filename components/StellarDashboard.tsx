@@ -479,55 +479,8 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
       {activeTab === 'AULA' ? (
         <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
           
-          {/* 1. CANJEA TUS PUNTOS: Marketplace prioritario */}
+          {/* 1. SIGUE APRENDIENDO: Featured Content */}
           <section className="pb-12 border-b border-white/5">
-            <div className="mb-10">
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-400 mb-2">Marketplace</p>
-              <h2 className="text-3xl font-black tracking-tighter uppercase leading-none">Canjea tus puntos</h2>
-              <p className="text-neutral-500 text-xs mt-2">Beneficios exclusivos para alumnos destacados de Crypto College.</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
-              {/* Reward: Mentoría */}
-              <div className="p-8 rounded-[40px] border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] transition-all flex items-center justify-between gap-6 group">
-                <div className="flex-1">
-                  <span className="bg-yellow-400/10 text-yellow-400 text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-yellow-400/20 mb-4 inline-block">
-                    100 PTS
-                  </span>
-                  <h4 className="text-lg font-black uppercase tracking-tight mb-1">Mentoría 1:1</h4>
-                  <p className="text-sm text-neutral-500 leading-relaxed">Sesión privada con expertos para revisar tu proyecto o carrera.</p>
-                </div>
-                <button 
-                  onClick={handleOpenMentors}
-                  disabled={points < 100}
-                  className={`px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all ${points >= 100 ? 'bg-white text-black hover:bg-yellow-400 shadow-xl shadow-white/5' : 'bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed'}`}
-                >
-                  Canjear
-                </button>
-              </div>
-
-              {/* Reward: Eventos */}
-              <div className="p-8 rounded-[40px] border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] transition-all flex items-center justify-between gap-6 group">
-                <div className="flex-1">
-                  <span className="bg-yellow-400/10 text-yellow-400 text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-yellow-400/20 mb-4 inline-block">
-                    100 PTS
-                  </span>
-                  <h4 className="text-lg font-black uppercase tracking-tight mb-1">Entradas VIP</h4>
-                  <p className="text-sm text-neutral-500 leading-relaxed">Pases para el Blockchain Summit Latam y otros eventos clave.</p>
-                </div>
-                <button 
-                  onClick={handleOpenEvents}
-                  disabled={points < 100}
-                  className={`px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all ${points >= 100 ? 'bg-white text-black hover:bg-yellow-400 shadow-xl shadow-white/5' : 'bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed'}`}
-                >
-                  Canjear
-                </button>
-              </div>
-            </div>
-          </section>
-
-          {/* 2. SIGUE APRENDIENDO: Featured Content */}
-          <section className="py-12 border-b border-white/5">
             <div className="mb-10">
               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-400 mb-2">Tu progreso</p>
               <h2 className="text-3xl font-black tracking-tighter uppercase leading-none">Sigue aprendiendo</h2>
