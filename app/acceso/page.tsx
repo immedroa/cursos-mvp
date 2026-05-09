@@ -34,7 +34,7 @@ export default function AccesoPage() {
               target="_blank"
               className="text-sm font-black text-yellow-400 hover:text-yellow-300 transition-colors uppercase tracking-widest"
             >
-              Adquirir acceso por Yape
+              Solicitar acceso por WhatsApp
             </a>
           </div>
         </div>

@@ -388,12 +388,40 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
               {/* Puntos */}
               <div className="flex flex-col items-center md:border-x border-white/5 px-8">
                 <p className="text-[10px] font-black uppercase tracking-[0.3em] text-neutral-500 mb-3">Balance de Aprendizaje</p>
-                <div className="flex items-end gap-3">
-                   <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-neutral-500 leading-none tabular-nums">{points}</span>
-                   <div className="flex flex-col mb-1">
-                     <span className="text-[10px] font-black text-yellow-400 uppercase tracking-widest leading-none">Puntos</span>
-                     <span className="text-[8px] font-bold text-neutral-600 uppercase tracking-widest mt-1">Acumulados</span>
-                   </div>
+                <div className="flex flex-col items-center gap-4 w-full">
+                  <div className="flex items-end gap-3">
+                    <span className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-neutral-500 leading-none tabular-nums">{points}</span>
+                    <div className="flex flex-col mb-1">
+                      <span className="text-[10px] font-black text-yellow-400 uppercase tracking-widest leading-none">Puntos</span>
+                      <span className="text-[8px] font-bold text-neutral-600 uppercase tracking-widest mt-1">Acumulados</span>
+                    </div>
+                  </div>
+                  
+                  {/* Botones de acción rápida de canje */}
+                  <div className="flex gap-2 w-full max-w-[240px]">
+                    <button 
+                      onClick={handleOpenMentors}
+                      disabled={points < 100}
+                      className={`flex-1 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all ${
+                        points >= 100 
+                        ? 'bg-yellow-400 text-black hover:scale-105 shadow-lg shadow-yellow-400/10' 
+                        : 'bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed'
+                      }`}
+                    >
+                      {points < 100 ? 'Faltan Puntos' : 'Canjear Mentoría'}
+                    </button>
+                    <button 
+                      onClick={handleOpenEvents}
+                      disabled={points < 100}
+                      className={`flex-1 py-2.5 rounded-xl font-black text-[9px] uppercase tracking-widest transition-all ${
+                        points >= 100 
+                        ? 'bg-white text-black hover:scale-105 shadow-lg shadow-white/5' 
+                        : 'bg-white/5 text-neutral-600 border border-white/5 cursor-not-allowed'
+                      }`}
+                    >
+                      {points < 100 ? 'Bloqueado' : 'Canjear Evento'}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -604,8 +632,11 @@ export default function StellarDashboard({ initialPoints, initialStellarAddress,
             </div>
           ) : (
             <div className="p-12 text-center rounded-[32px] border border-dashed border-white/10 bg-white/[0.01]">
-              <p className="text-neutral-500 text-sm mb-4">Todavía no tienes recompensas on-chain registradas.</p>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-600">Canjea una mentoría para ver aquí tus transacciones en Stellar Testnet.</p>
+              <p className="text-neutral-400 text-sm mb-4 font-bold uppercase tracking-tight">Tu pasaporte on-chain está vacío</p>
+              <p className="text-[11px] text-neutral-500 leading-relaxed max-w-xs mx-auto">
+                Cada vez que canjeas tus puntos por recompensas, se genera una transacción real en la red Stellar que certifica tu avance. 
+                <span className="block mt-4 text-yellow-400/80 font-black uppercase tracking-widest">¡Llega a los 100 puntos y activa tu historial!</span>
+              </p>
             </div>
           )}
         </section>
